@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BibleWorks Search</title>
+<style>
+  :root {
+    --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460;
+    --accent: #e94560; --accent2: #53d8fb;
+    --text: #e0e0e0; --muted: #8899aa; --border: #2a3a5a;
+    --green: #4caf82; --gold: #f0c040; --blue: #53a8fb;
+    --hebrew-font: 'Times New Roman', serif;
+    --greek-font: 'Times New Roman', serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    background: var(--surface2); border-bottom: 2px solid var(--accent);
+    padding: 6px 12px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  #topbar h1 { font-size: 14px; font-weight: 700; color: var(--accent2); letter-spacing: 1px; white-space: nowrap; }
+  #searchInput {
+    flex: 1; background: #0a1628; border: 1px solid var(--border); color: var(--text);
+    padding: 5px 10px; border-radius: 3px; font-size: 14px; font-family: monospace;
+  }
+  #searchInput:focus { outline: none; border-color: var(--accent2); }
+  select {
+    background: #0a1628; border: 1px solid var(--border); color: var(--text);
+    padding: 5px 8px; border-radius: 3px; font-size: 13px; cursor: pointer;
+  }
+  button {
+    background: var(--accent); color: white; border: none; padding: 6px 14px;
+    border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 600;
+  }
+  button:hover { background: #c73450; }
+  .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { background: var(--border); }
+
+  /* ── MAIN SPLIT ── */
+  #main { display: flex; flex: 1; overflow: hidden; gap: 0; }
+
+  /* ── SEARCH RESULTS PANEL ── */
+  #resultsPanel {
+    width: 320px; min-width: 200px; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  #resultsHeader {
+    background: var(--surface2); padding: 6px 10px; font-size: 12px;
+    color: var(--muted); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;
+  }
+  #resultsList { flex: 1; overflow-y: auto; }
+  .result-item {
+    padding: 6px 10px; border-bottom: 1px solid #1e2e46; cursor: pointer;
+    font-size: 13px; line-height: 1.4;
+  }
+  .result-item:hover { background: var(--surface2); }
+  .result-item.active { background: #0f3460; border-left: 3px solid var(--accent2); }
+  .result-ref { font-weight: 700; color: var(--gold); font-size: 12px; }
+  .result-text { color: var(--text); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .result-text.hebrew { font-family: var(--hebrew-font); font-size: 14px; direction: rtl; }
+  .result-text.greek { font-family: var(--greek-font); }
+
+  /* ── BROWSE / RIGHT PANEL ── */
+  #browsePanel {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  }
+  #browseNav {
+    background: var(--surface2); padding: 6px 12px;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  #browseNav select { font-size: 12px; }
+  #navRef { color: var(--accent2); font-size: 12px; font-weight: 600; margin-left: 4px; }
+  #verseContainer { flex: 1; overflow-y: auto; padding: 16px 20px; }
+
+  /* ── VERSE DISPLAY ── */
+  .verse-block { margin-bottom: 18px; }
+  .verse-ref {
+    color: var(--gold); font-size: 11px; font-weight: 700;
+    margin-bottom: 4px; letter-spacing: 0.5px;
+  }
+  .verse-text {
+    font-size: 17px; line-height: 1.8; color: var(--text);
+  }
+  .verse-text.hebrew { font-family: var(--hebrew-font); font-size: 20px; direction: rtl; }
+  .verse-text.greek { font-family: var(--greek-font); }
+
+  .word-span {
+    cursor: pointer; border-radius: 2px; padding: 0 1px;
+    transition: background 0.1s;
+  }
+  .word-span:hover { background: rgba(83,216,251,0.2); }
+  .word-span.highlight { background: rgba(233,69,96,0.35); border-radius: 3px; }
+  .word-span.active-word { background: rgba(240,192,64,0.4); }
+
+  /* ── MORPH POPUP ── */
+  #morphPopup {
+    position: fixed; background: #0a1628; border: 1px solid var(--accent2);
+    border-radius: 6px; padding: 10px 14px; font-size: 12px; z-index: 999;
+    min-width: 200px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    display: none; pointer-events: none;
+  }
+  #morphPopup .mp-surface { font-size: 18px; color: var(--text); font-family: var(--greek-font); margin-bottom: 4px; }
+  #morphPopup .mp-lemma { color: var(--accent2); font-size: 13px; margin-bottom: 2px; }
+  #morphPopup .mp-code { color: var(--green); font-family: monospace; font-size: 12px; margin-bottom: 4px; }
+  #morphPopup .mp-parsed { color: var(--muted); font-size: 11px; line-height: 1.6; }
+
+  /* ── STATUS BAR ── */
+  #statusBar {
+    background: var(--surface2); border-top: 1px solid var(--border);
+    padding: 3px 12px; font-size: 11px; color: var(--muted); flex-shrink: 0;
+    display: flex; gap: 16px;
+  }
+  #statusBar span { white-space: nowrap; }
+
+  /* scrollbars */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .spinner { display: inline-block; width: 12px; height: 12px;
+    border: 2px solid var(--muted); border-top-color: var(--accent2);
+    border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* help bar */
+  #helpBar {
+    background: #0a1628; border-bottom: 1px solid var(--border);
+    padding: 4px 12px; font-size: 11px; color: var(--muted); flex-shrink: 0;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  #helpBar span { white-space: nowrap; }
+  #helpBar code { color: var(--green); background: #0f1e30; padding: 0 3px; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <h1>⛪ BibleSearch</h1>
+  <input id="searchInput" type="text" placeholder=".word1 word2   |   'phrase   |   /word1 word2   |   .lemma@code"
+         value=".cristoj" autocomplete="off" spellcheck="false">
+  <select id="langSelect">
+    <option value="grk">Greek (NT)</option>
+    <option value="heb">Hebrew (OT)</option>
+  </select>
+  <button onclick="doSearch()">Search</button>
+</div>
+
+<!-- HELP BAR -->
+<div id="helpBar">
+  <span><code>.</code> AND &nbsp; <code>/</code> OR &nbsp; <code>'</code> phrase &nbsp; <code>!</code> NOT</span>
+  <span><code>*</code> wildcard &nbsp; <code>?</code> single char</span>
+  <span><code>@code</code> morph &nbsp; e.g. <code>.cristoj@n*</code></span>
+  <span><code>;N</code> within N verses &nbsp; e.g. <code>.word1 word2;3</code></span>
+  <span>Hebrew: Strong's numbers &nbsp; e.g. <code>.1254@vq*</code></span>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- RESULTS PANEL -->
+  <div id="resultsPanel">
+    <div id="resultsHeader">
+      <span id="resultsLabel">Search results</span>
+      <span id="resultsCount"></span>
+    </div>
+    <div id="resultsList"></div>
+  </div>
+
+  <!-- BROWSE PANEL -->
+  <div id="browsePanel">
+    <div id="browseNav">
+      <select id="bookSelect" onchange="onBookChange()"></select>
+      <select id="chapterSelect" onchange="onChapterChange()"></select>
+      <select id="verseJumpSelect" onchange="jumpToVerse()"></select>
+      <span id="navRef"></span>
+      <button class="btn-secondary" onclick="navChapter(-1)">◀ Prev</button>
+      <button class="btn-secondary" onclick="navChapter(1)">Next ▶</button>
+    </div>
+    <div id="verseContainer">
+      <div style="color:var(--muted); padding:40px; text-align:center;">
+        Enter a search query above, or browse a chapter using the navigation controls.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusBar">
+  <span id="statusSearch">Ready</span>
+  <span id="statusVerse"></span>
+  <span style="margin-left:auto; color:#3a4a6a;">MorphGNT + OSHB | BibleWorks-style search</span>
+</div>
+
+<!-- MORPH POPUP -->
+<div id="morphPopup">
+  <div class="mp-surface" id="mpSurface"></div>
+  <div class="mp-lemma" id="mpLemma"></div>
+  <div class="mp-code" id="mpCode"></div>
+  <div class="mp-parsed" id="mpParsed"></div>
+</div>
+
+<script>
+// ── STATE ──
+let currentResults = [];
+let currentBook = 40, currentChapter = 1;
+let currentLang = 'grk';
+let highlightLemmas = new Set();
+let allBooks = [];
+
+// ── MORPH PARSING ──
+const GRK_POS = {
+  'v':'Verb','n':'Noun','a':'Adjective','r':'Pronoun','d':'Article',
+  'c':'Conjunction','p':'Preposition','b':'Adverb','i':'Interjection','x':'Particle'
+};
+const GRK_MOOD = {'i':'Indicative','d':'Imperative','s':'Subjunctive','o':'Optative','n':'Infinitive','p':'Participle'};
+const GRK_TENSE = {'p':'Present','f':'Future','a':'Aorist','i':'Imperfect','x':'Perfect','y':'Pluperfect'};
+const GRK_VOICE = {'a':'Active','m':'Middle','p':'Passive','e':'Middle/Passive'};
+const GRK_CASE = {'n':'Nominative','g':'Genitive','d':'Dative','a':'Accusative','v':'Vocative'};
+const GRK_GENDER = {'m':'Masculine','f':'Feminine','n':'Neuter'};
+const GRK_NUMBER = {'s':'Singular','p':'Plural'};
+const GRK_PERSON = {'1':'1st','2':'2nd','3':'3rd'};
+
+const HEB_STEM = {
+  'q':'Qal','N':'Niphal','p':'Piel','P':'Pual','h':'Hiphil','H':'Hophal',
+  'd':'Hithpael','V':'Hithpoel','v':'Polel','t':'Hishtaphel','T':'Hithpolel'
+};
+const HEB_TENSE = {
+  'p':'Perfect','i':'Imperfect','v':'Wayyiqtol','c':'Cohortative',
+  'j':'Jussive','w':'Vav-consec.','a':'Imperative','r':'Ptcp. Active',
+  's':'Ptcp. Passive','f':'Inf. Absolute','e':'Inf. Construct'
+};
+const HEB_POS = {
+  'v':'Verb','n':'Noun','a':'Adjective','p':'Pronoun','c':'Conjunction',
+  'r':'Relative','t':'Particle','k':'Preposition','d':'Adverb','m':'Number','s':'Suffix'
+};
+
+function parseMorphCode(code, lang) {
+  if (!code || code === '????') return [];
+  const parts = [];
+  if (lang === 'grk') {
+    const pos = code[0];
+    parts.push(['Part of Speech', GRK_POS[pos] || pos]);
+    if (pos === 'v') {
+      const mood = code[1], tense = code[2], voice = code[3];
+      parts.push(['Mood', GRK_MOOD[mood] || mood]);
+      parts.push(['Tense', GRK_TENSE[tense] || tense]);
+      parts.push(['Voice', GRK_VOICE[voice] || voice]);
+      if (mood === 'p') { // participle
+        parts.push(['Case', GRK_CASE[code[4]] || code[4]]);
+        parts.push(['Gender', GRK_GENDER[code[5]] || code[5]]);
+        parts.push(['Number', GRK_NUMBER[code[6]] || code[6]]);
+      } else if (mood !== 'n') {
+        parts.push(['Person', GRK_PERSON[code[4]] || code[4]]);
+        parts.push(['Number', GRK_NUMBER[code[5]] || code[5]]);
+      }
+    } else if ('ndar'.includes(pos)) {
+      parts.push(['Case', GRK_CASE[code[1]] || code[1]]);
+      parts.push(['Gender', GRK_GENDER[code[2]] || code[2]]);
+      parts.push(['Number', GRK_NUMBER[code[3]] || code[3]]);
+    }
+  } else {
+    // Hebrew
+    const codeClean = code.replace(/R[qkx]$/, '');
+    const pos = codeClean[0];
+    const qk = code.match(/R([qkx])$/);
+    parts.push(['Part of Speech', HEB_POS[pos] || pos]);
+    if (pos === 'v') {
+      parts.push(['Stem', HEB_STEM[codeClean[1]] || codeClean[1]]);
+      parts.push(['Tense/Aspect', HEB_TENSE[codeClean[2]] || codeClean[2]]);
+      parts.push(['Person', codeClean[3]]);
+      parts.push(['Gender', codeClean[4] === 'm' ? 'Masculine' : codeClean[4] === 'f' ? 'Feminine' : codeClean[4]]);
+      parts.push(['Number', codeClean[5] === 's' ? 'Singular' : codeClean[5] === 'p' ? 'Plural' : codeClean[5]]);
+    } else if ('na'.includes(pos)) {
+      parts.push(['Gender', codeClean[2] === 'm' ? 'Masculine' : codeClean[2] === 'f' ? 'Feminine' : codeClean[2]]);
+      parts.push(['Number', codeClean[3] === 's' ? 'Singular' : codeClean[3] === 'p' ? 'Plural' : codeClean[3]]);
+      parts.push(['State', codeClean[4] === 'a' ? 'Absolute' : codeClean[4] === 'c' ? 'Construct' : codeClean[4] === 'd' ? 'Determined' : codeClean[4]]);
+    }
+    if (qk) parts.push(['Qere/Kethib', qk[1] === 'q' ? 'Qere' : qk[1] === 'k' ? 'Kethib' : 'Both']);
+  }
+  return parts.filter(([k,v]) => v && v !== '?' && v !== '????' && v !== '??');
+}
+
+// ── INIT ──
+async function init() {
+  const res = await fetch('/api/books');
+  allBooks = await res.json();
+  const sel = document.getElementById('bookSelect');
+  allBooks.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.num; opt.textContent = b.name;
+    if (b.num === 40) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  await loadChapters(40);
+  loadChapter(40, 1);
+}
+
+async function loadChapters(book) {
+  const res = await fetch(`/api/chapters?book=${book}`);
+  const chapters = await res.json();
+  const sel = document.getElementById('chapterSelect');
+  sel.innerHTML = '';
+  chapters.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = 'Ch. ' + c;
+    sel.appendChild(opt);
+  });
+}
+
+async function onBookChange() {
+  const book = parseInt(document.getElementById('bookSelect').value);
+  currentBook = book;
+  await loadChapters(book);
+  loadChapter(book, 1);
+}
+
+function onChapterChange() {
+  const ch = parseInt(document.getElementById('chapterSelect').value);
+  loadChapter(currentBook, ch);
+}
+
+function navChapter(delta) {
+  const sel = document.getElementById('chapterSelect');
+  const idx = sel.selectedIndex + delta;
+  if (idx >= 0 && idx < sel.options.length) {
+    sel.selectedIndex = idx;
+    onChapterChange();
+  }
+}
+
+function jumpToVerse() {
+  const v = document.getElementById('verseJumpSelect').value;
+  if (v) scrollToVerse(v);
+}
+
+// ── BROWSE ──
+async function loadChapter(book, chapter, highlightRefs) {
+  currentBook = book; currentChapter = chapter;
+  document.getElementById('navRef').textContent = '';
+  document.getElementById('statusVerse').textContent = 'Loading…';
+
+  const [passRes, wordsRes] = await Promise.all([
+    fetch(`/api/passage?book=${book}&chapter=${chapter}`),
+    fetch(`/api/verse?book=${book}&chapter=${chapter}&verse=1`)
+  ]);
+  const verses = await passRes.json();
+
+  // Determine language
+  const lang = book <= 39 ? 'heb' : 'grk';
+  currentLang = lang;
+
+  // Update verse jump select
+  const vjSel = document.getElementById('verseJumpSelect');
+  vjSel.innerHTML = '<option value="">↓ verse</option>';
+  verses.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.verse; opt.textContent = 'v.' + v.verse;
+    vjSel.appendChild(opt);
+  });
+
+  // Render
+  const container = document.getElementById('verseContainer');
+  container.innerHTML = '';
+
+  for (const v of verses) {
+    const block = document.createElement('div');
+    block.className = 'verse-block';
+    block.id = `verse-${v.verse}`;
+
+    const refLine = document.createElement('div');
+    refLine.className = 'verse-ref';
+    const bookName = allBooks.find(b => b.num === book)?.name || book;
+    refLine.textContent = `${bookName} ${chapter}:${v.verse}`;
+    block.appendChild(refLine);
+
+    // Build word-by-word verse text (needs word-level fetch)
+    const textLine = document.createElement('div');
+    textLine.className = 'verse-text ' + (lang === 'heb' ? 'hebrew' : 'greek');
+    textLine.dataset.verse = v.verse;
+    textLine.textContent = v.text; // placeholder; words loaded on demand for morph
+    block.appendChild(textLine);
+    container.appendChild(block);
+  }
+
+  // Load all word data for this chapter in one batch for morph popups + highlighting
+  loadChapterWords(book, chapter, highlightRefs, verses);
+
+  // Sync book/chapter selectors
+  document.getElementById('bookSelect').value = book;
+  const cSel = document.getElementById('chapterSelect');
+  for (let i = 0; i < cSel.options.length; i++) {
+    if (parseInt(cSel.options[i].value) === chapter) { cSel.selectedIndex = i; break; }
+  }
+  document.getElementById('statusVerse').textContent =
+    `${allBooks.find(b=>b.num===book)?.name} ${chapter}  (${verses.length} verses)`;
+}
+
+async function loadChapterWords(book, chapter, highlightRefs, verses) {
+  // Fetch each verse's word data and replace plain text with interactive spans
+  const container = document.getElementById('verseContainer');
+  const lang = book <= 39 ? 'heb' : 'grk';
+
+  for (const v of verses) {
+    const res = await fetch(`/api/verse?book=${book}&chapter=${chapter}&verse=${v.verse}`);
+    const words = await res.json();
+    const textLine = container.querySelector(`#verse-${v.verse} .verse-text`);
+    if (!textLine) continue;
+    textLine.innerHTML = '';
+    words.forEach((w, idx) => {
+      const span = document.createElement('span');
+      span.className = 'word-span';
+      span.dataset.lemma = w.lemma;
+      span.dataset.surface = w.surface;
+      span.dataset.code = w.bw_code;
+      span.dataset.lang = w.lang;
+      span.textContent = w.surface;
+      // highlight if this verse is a search hit
+      if (highlightRefs && highlightRefs.has(book * 1000000 + chapter * 1000 + v.verse)) {
+        span.classList.add('highlight');
+      }
+      span.addEventListener('mouseenter', showMorph);
+      span.addEventListener('mouseleave', hideMorph);
+      textLine.appendChild(span);
+      if (idx < words.length - 1) textLine.appendChild(document.createTextNode(' '));
+    });
+  }
+}
+
+function scrollToVerse(verse) {
+  const el = document.getElementById(`verse-${verse}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── MORPH POPUP ──
+function showMorph(e) {
+  const span = e.currentTarget;
+  const popup = document.getElementById('morphPopup');
+  document.getElementById('mpSurface').textContent = span.dataset.surface;
+  const lang = span.dataset.lang;
+  const isHeb = lang === 'heb';
+  document.getElementById('mpLemma').textContent =
+    isHeb ? 'Strong\'s: ' + span.dataset.lemma : 'Lemma: ' + span.dataset.surface;
+  document.getElementById('mpCode').textContent = 'Code: ' + span.dataset.code;
+  const parsed = parseMorphCode(span.dataset.code, isHeb ? 'heb' : 'grk');
+  document.getElementById('mpParsed').innerHTML =
+    parsed.map(([k,v]) => `<b style="color:#8899aa">${k}:</b> ${v}`).join('<br>');
+  popup.style.display = 'block';
+
+  // Position popup near mouse
+  const x = Math.min(e.clientX + 12, window.innerWidth - 220);
+  const y = Math.min(e.clientY + 12, window.innerHeight - 160);
+  popup.style.left = x + 'px';
+  popup.style.top = y + 'px';
+}
+
+function hideMorph() {
+  document.getElementById('morphPopup').style.display = 'none';
+}
+
+// ── SEARCH ──
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  const lang = document.getElementById('langSelect').value;
+  if (!q) return;
+
+  document.getElementById('statusSearch').innerHTML = '<span class="spinner"></span> Searching…';
+  document.getElementById('resultsLabel').textContent = 'Searching…';
+  document.getElementById('resultsList').innerHTML = '';
+
+  const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&lang=${lang}`);
+  const data = await res.json();
+
+  document.getElementById('statusSearch').textContent =
+    data.error ? '⚠ ' + data.error : `${data.count} hit${data.count !== 1 ? 's' : ''}`;
+  document.getElementById('resultsLabel').textContent = data.error ? 'Error' : 'Results';
+  document.getElementById('resultsCount').textContent = data.count > 500 ? '500 shown' : '';
+
+  currentResults = data.results;
+
+  const list = document.getElementById('resultsList');
+  if (data.error) {
+    list.innerHTML = `<div style="padding:12px;color:var(--accent);font-size:12px">${data.error}</div>`;
+    return;
+  }
+  if (!data.results.length) {
+    list.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">No results found.</div>';
+    return;
+  }
+
+  // Build highlight set for browse
+  const refSet = new Set(data.results.map(r => r.book * 1000000 + r.chapter * 1000 + r.verse));
+
+  data.results.forEach((r, i) => {
+    const item = document.createElement('div');
+    item.className = 'result-item';
+    const isHeb = r.book <= 39;
+    item.innerHTML = `<div class="result-ref">${r.ref}</div>
+      <div class="result-text ${isHeb?'hebrew':'greek'}">${r.text.substring(0,100)}${r.text.length>100?'…':''}</div>`;
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.result-item').forEach(el => el.classList.remove('active'));
+      item.classList.add('active');
+      // Navigate browse window to this verse's chapter
+      loadChapter(r.book, r.chapter, refSet).then(() => {
+        setTimeout(() => scrollToVerse(r.verse), 300);
+      });
+    });
+    list.appendChild(item);
+  });
+
+  // Auto-navigate to first result
+  if (data.results.length) {
+    list.firstChild.classList.add('active');
+    const first = data.results[0];
+    loadChapter(first.book, first.chapter, refSet).then(() => {
+      setTimeout(() => scrollToVerse(first.verse), 400);
+    });
+  }
+}
+
+// ── KEY BINDINGS ──
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+document.addEventListener('mousemove', e => {
+  const popup = document.getElementById('morphPopup');
+  if (popup.style.display === 'block') {
+    const x = Math.min(e.clientX + 12, window.innerWidth - 220);
+    const y = Math.min(e.clientY + 12, window.innerHeight - 160);
+    popup.style.left = x + 'px';
+    popup.style.top = y + 'px';
+  }
+});
+
+// ── BOOT ──
+init();
+</script>
+</body>
+</html>
