@@ -1,0 +1,88 @@
+name: Build desktop executables
+
+# Runs on GitHub's free-tier hosted runners (2,000 free minutes/month on
+# public repos is effectively unlimited for occasional releases like this).
+# Triggers:
+#   - push of a version tag (v1.0.0 etc.) -> builds AND attaches to a Release
+#   - manual "Run workflow" button        -> builds only, download from the
+#                                             Actions run's Artifacts tab
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch: {}
+
+env:
+  # One-time step (see README): create a GitHub Release (any tag, e.g.
+  # "corpus-v1") and upload corpus.db to it as an asset, then paste that
+  # asset's download URL here. This keeps the 129MB DB out of git entirely
+  # (GitHub hard-blocks git-committed files over 100MB) while still being
+  # free, permanent hosting.
+  CORPUS_DB_URL: "https://github.com/OWNER/REPO/releases/download/corpus-v1/corpus.db"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: biblesearch-linux
+          - os: windows-latest
+            artifact_name: biblesearch-windows.exe
+          - os: macos-latest
+            artifact_name: biblesearch-macos
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch corpus.db
+        # curl ships on all three GitHub-hosted runner images, so this one
+        # step works identically on Linux, Windows, and macOS.
+        run: |
+          mkdir -p data
+          curl -L -o data/corpus.db "${{ env.CORPUS_DB_URL }}"
+
+      - name: Verify corpus.db downloaded correctly
+        # Cheap sanity check -- if the release URL is wrong/expired we'd
+        # otherwise ship a broken HTML error page instead of a database.
+        shell: bash
+        run: |
+          size=$(stat -c%s data/corpus.db 2>/dev/null || stat -f%z data/corpus.db)
+          echo "corpus.db size: $size bytes"
+          if [ "$size" -lt 1000000 ]; then
+            echo "::error::corpus.db looks too small -- check CORPUS_DB_URL"
+            exit 1
+          fi
+
+      - name: Build with PyInstaller
+        run: pyinstaller biblesearch.spec
+
+      - name: Rename artifact
+        shell: bash
+        run: |
+          cd dist
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            mv biblesearch.exe "${{ matrix.artifact_name }}"
+          else
+            mv biblesearch "${{ matrix.artifact_name }}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/${{ matrix.artifact_name }}
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ matrix.artifact_name }}
