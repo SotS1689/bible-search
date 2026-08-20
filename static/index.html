@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BibleWorks Search</title>
+<style>
+  :root {
+    --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460;
+    --accent: #e94560; --accent2: #53d8fb;
+    --text: #e0e0e0; --muted: #8899aa; --border: #2a3a5a;
+    --green: #4caf82; --gold: #c8a000; --blue: #53a8fb;
+    --hebrew-font: 'Times New Roman', serif;
+    --greek-font: 'Times New Roman', serif;
+	--english-font: 'Times New Roman', serif;
+    --sidebar-font-size: 13px;
+    --browse-font-size: 17px;
+    --browse-hebrew-font-size: 20px;
+    --input-bg: #0a1628;
+    --active-bg: #0f3460;
+  }
+  :root.light {
+    --bg: #f4f1eb; --surface: #ffffff; --surface2: #e8e2d8;
+    --accent: #c0392b; --accent2: #1a6fa8;
+    --text: #1a1a1a; --muted: #666666; --border: #cccccc;
+    --green: #1a7a40; --gold: #8a6800; --blue: #1a6fa8;
+    --input-bg: #ffffff;
+    --active-bg: #dce8f5;
+  }
+
+  /* ── DARK COLOUR SCHEMES ── */
+  :root.dark-blue   { --bg:#0d1b2e;--surface:#122240;--surface2:#1a3a6e;--accent:#0088ab;--accent2:#53d8fb;--text:#dce8ff;--muted:#7a9abf;--border:#1e3a6a;--green:#4caf82;--gold:#c8a000;--blue:#53a8fb;--input-bg:#071524;--active-bg:#1a3a6e; }
+  :root.dark-yellow { --bg:#1c1a00;--surface:#2a2600;--surface2:#3d3700;--accent:#f0a500;--accent2:#ffe066;--text:#fff8d6;--muted:#a09060;--border:#4a4200;--green:#7abf50;--gold:#f0a500;--blue:#a0c8ff;--input-bg:#111000;--active-bg:#3d3700; }
+  :root.dark-red    { --bg:#1e0a0a;--surface:#2e1010;--surface2:#4a1818;--accent:#e94560;--accent2:#ff8c8c;--text:#ffe0e0;--muted:#a06060;--border:#5a2020;--green:#4caf82;--gold:#d4a020;--blue:#8cb8e8;--input-bg:#120606;--active-bg:#4a1818; }
+  :root.dark-green  { --bg:#0a1a0e;--surface:#102818;--surface2:#1a4228;--accent:#4caf82;--accent2:#80ffb8;--text:#d8ffe8;--muted:#6a9a7a;--border:#1e4830;--green:#4caf82;--gold:#c8b040;--blue:#70c8ff;--input-bg:#061210;--active-bg:#1a4228; }
+  :root.dark-purple { --bg:#120a1e;--surface:#1e1030;--surface2:#301848;--accent:#c06aff;--accent2:#e0a0ff;--text:#eedeff;--muted:#8860aa;--border:#3a1a60;--green:#4caf82;--gold:#c8a040;--blue:#80b8ff;--input-bg:#0c0614;--active-bg:#301848; }
+  :root.dark-cream  { --bg:#1c1810;--surface:#2a2418;--surface2:#3c3424;--accent:#d4a050;--accent2:#f0c880;--text:#f5eddc;--muted:#9a8a70;--border:#4a3e2a;--green:#7ab860;--gold:#d4a050;--blue:#90b8d8;--input-bg:#141008;--active-bg:#3c3424; }
+
+  /* ── LIGHT COLOUR SCHEMES ── */
+  :root.light-blue   { --bg:#e8f0fa;--surface:#ffffff;--surface2:#d0e4f8;--accent:#1a6fa8;--accent2:#0a4a80;--text:#0a1a2e;--muted:#4a6880;--border:#aacae8;--green:#1a7a40;--gold:#8a6800;--blue:#1a6fa8;--input-bg:#ffffff;--active-bg:#c0d8f4; }
+  :root.light-yellow { --bg:#fffce8;--surface:#ffffff;--surface2:#fff8c0;--accent:#b07800;--accent2:#7a5200;--text:#1a1600;--muted:#706020;--border:#e0d060;--green:#1a7a40;--gold:#b07800;--blue:#2060a0;--input-bg:#ffffff;--active-bg:#fff0a0; }
+  :root.light-red    { --bg:#fff0f0;--surface:#ffffff;--surface2:#fde0e0;--accent:#c0392b;--accent2:#8b0000;--text:#1a0000;--muted:#804040;--border:#f0aaaa;--green:#1a7a40;--gold:#8a5800;--blue:#1a6fa8;--input-bg:#ffffff;--active-bg:#fac8c8; }
+  :root.light-green  { --bg:#f0faf2;--surface:#ffffff;--surface2:#d8f4e0;--accent:#1a7a40;--accent2:#0a5228;--text:#001a08;--muted:#3a6848;--border:#90d8a8;--green:#1a7a40;--gold:#8a6800;--blue:#1a6fa8;--input-bg:#ffffff;--active-bg:#b8ecc8; }
+  :root.light-purple { --bg:#f6f0ff;--surface:#ffffff;--surface2:#ecdeff;--accent:#7030b0;--accent2:#4a1880;--text:#0e001a;--muted:#604880;--border:#c8a8f0;--green:#1a7a40;--gold:#7a5e00;--blue:#1a6fa8;--input-bg:#ffffff;--active-bg:#dcc8ff; }
+  :root.light-cream  { --bg:#fdf8f0;--surface:#fffcf6;--surface2:#f5ece0;--accent:#8a5a2a;--accent2:#5a3a10;--text:#1a1008;--muted:#806848;--border:#d8c8a8;--green:#3a7a28;--gold:#8a6000;--blue:#1a5a8a;--input-bg:#fffcf6;--active-bg:#eeddc8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+
+  #topbar {
+    background: var(--surface2); border-bottom: 2px solid var(--accent);
+    padding: 6px 12px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  #topbar h1 { font-size: 14px; font-weight: 700; color: var(--accent2); letter-spacing: 1px; white-space: nowrap; }
+  #searchInput {
+    flex: 1; max-width: 35%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+    padding: 5px 10px; border-radius: 3px; font-size: 15px;
+    font-family: 'Times New Roman', serif;
+  }
+  #searchInput:focus { outline: none; border-color: var(--accent2); }
+  select {
+    background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+    padding: 5px 8px; border-radius: 3px; font-size: 13px; cursor: pointer;
+  }
+  button {
+    background: var(--accent); color: white; border: none; padding: 6px 14px;
+    border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 600;
+  }
+  button:hover { background: #c73450; }
+  .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { background: var(--border); }
+
+  #main { display: flex; flex: 1; overflow: hidden; }
+
+  #resultsPanel {
+    width: 320px; min-width: 200px; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  #resultsHeader {
+    background: var(--surface2); padding: 6px 10px; font-size: 12px;
+    color: var(--muted); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;
+  }
+  #resultsList { flex: 1; overflow-y: auto; }
+  .result-item {
+    padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer;
+    font-size: var(--sidebar-font-size); line-height: 1.4;
+  }
+  .result-item:hover { background: var(--surface2); }
+  .result-item.active { background: var(--active-bg); border-left: 3px solid var(--accent2); }
+  .result-ref { font-weight: 700; color: var(--accent); font-size: 12px; }
+  .result-text { color: var(--text); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .result-text.hebrew { font-family: var(--hebrew-font); font-size: 14px; direction: rtl; }
+  .result-text.greek  { font-family: var(--greek-font); }
+
+  #browsePanel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #browseNav {
+    background: var(--surface2); padding: 6px 12px;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  #browseNav select { font-size: 12px; }
+  #navRef { color: var(--accent2); font-size: 12px; font-weight: 600; margin-left: 4px; }
+  #verseContainer { flex: 1; overflow-y: auto; padding: 16px 20px; }
+
+  .verse-block { margin-bottom: 18px; }
+
+  /* ── READ MODE ── */
+  #verseContainer.read-mode .verse-block { display: inline; }
+  #verseContainer.read-mode .verse-ref   { display: none; }
+  #verseContainer.read-mode .verse-text  { display: inline; }
+  #verseContainer.read-mode .verse-english { display: none !important; }
+
+  .read-chapter-block { margin-bottom: 2em; }
+  .read-chapter-heading {
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    letter-spacing: 0.5px; margin-bottom: 0.6em;
+    padding-bottom: 4px; border-bottom: 1px solid var(--border);
+  }
+  .read-book-heading {
+    font-size: 15px; font-weight: 700; color: var(--accent2);
+    letter-spacing: 1px; margin-bottom: 1em; margin-top: 0.5em;
+  }
+  .read-para {
+    font-size: var(--browse-font-size); line-height: 2;
+    color: var(--text);
+	font-family: var(--english-font)
+  }
+  .read-para.hebrew { font-family: var(--hebrew-font);
+    font-size: var(--browse-hebrew-font-size); direction: rtl; }
+  .read-para.greek  { font-family: var(--greek-font); }
+  .read-para.english-para {font-family: var(--english-font); font-size: var(--browse-english-font-size, 13px);
+    color: var(--text); font-style: italic; margin-top: 0.4em; line-height: 1.8; }
+  .read-versenum {
+    font-size: 0.6em; vertical-align: super; color: var(--gold);
+    font-weight: 700; margin-right: 1px; user-select: none; line-height: 0;
+  }
+  .word-span.read-word { cursor: pointer; border-radius: 2px; padding: 0 1px; }
+  .word-span.read-word:hover { background: rgba(83,216,251,0.18); }
+  .word-span.read-word.word-hit { background: rgba(233,69,96,0.35); color:#fff; border-radius:3px; }
+  .verse-english {
+    font-size: var(--browse-font-size, 16px); line-height: 1.7; color: var(--text);
+	font-family: var(--english-font);
+    margin-top: 3px;
+    border-left: 2px solid var(--border);
+    padding-left: 8px;
+  }
+  .verse-english.hidden { display: none; }
+  .verse-lxx {
+    font-size: var(--browse-font-size, 18px); line-height: 1.7; color: var(--text);
+    margin-top: 3px; font-family: var(--greek-font);
+    border-left: 2px solid var(--border);
+    padding-left: 8px;
+  }
+  .verse-lxx.hidden { display: none; }
+  .lxx-label { font-style: normal; font-size: 0.85em; color: var(--accent); margin-right: 4px; }
+  .verse-ref { color: var(--accent); font-size: 14px; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .verse-text { font-size: var(--browse-font-size); line-height: 1.9; color: var(--text); }
+  .verse-text.hebrew { font-family: var(--hebrew-font); font-size: var(--browse-hebrew-font-size); direction: rtl; }
+  .verse-text.greek  { font-family: var(--greek-font); }
+  .verse-text + .verse-text { margin-top: 3px; }
+
+  #supportCallout {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 260px;
+    background: var(--surface2, #23232f);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    padding: 12px 14px;
+    z-index: 500;
+    font-family: var(--english-font, inherit);
+  }
+  #supportCallout.open { display: block; animation: supportCalloutIn 0.18s ease-out; }
+  @keyframes supportCalloutIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .support-callout-arrow {
+    position: absolute; top: -6px; right: 18px;
+    width: 10px; height: 10px;
+    background: var(--surface2, #23232f);
+    border-left: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    transform: rotate(45deg);
+  }
+  .support-callout-title {
+    margin: 0 0 4px; font-size: 13px; font-weight: 700; color: var(--text);
+  }
+  .support-callout-body {
+    margin: 0 0 10px; font-size: 12px; line-height: 1.5; color: var(--muted);
+  }
+  .support-callout-actions {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  }
+  .support-callout-btn {
+    font-size: 12px; cursor: pointer; border-radius: 4px; border: none;
+    padding: 5px 10px; text-decoration: none; white-space: nowrap;
+  }
+  .support-callout-btn-primary {
+    background: var(--accent); color: #fff; font-weight: 600;
+  }
+  .support-callout-btn-primary:hover { background: #c73450; }
+  .support-callout-btn-secondary {
+    background: var(--surface, transparent); color: var(--text); border: 1px solid var(--border);
+  }
+  .support-callout-btn-text {
+    background: none; color: var(--muted); padding: 5px 2px; font-size: 11px;
+  }
+  .support-callout-btn-text:hover { color: var(--text); text-decoration: underline; }
+
+  .word-span {
+    cursor: pointer; border-radius: 2px; padding: 0 1px; transition: background 0.1s;
+  }
+  .word-span:hover { background: rgba(83,216,251,0.18); }
+  /* Verse-level hit (whole verse is a result) */
+  .word-span.verse-hit { color: var(--text); }
+  /* Word-level highlight: the specific searched word */
+  .word-span.word-hit {
+    background: rgba(233,69,96,0.38);
+    border-radius: 3px;
+    color: #fff;
+  }
+  .word-span.word-hit:hover { background: rgba(233,69,96,0.55); }
+
+  #morphPopup {
+    position: fixed; background: var(--input-bg); border: 1px solid var(--accent2);
+    border-radius: 6px; padding: 10px 14px; font-size: 12px; z-index: 999;
+    min-width: 200px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    display: none; pointer-events: none;
+  }
+  #morphPopup .mp-surface { font-size: 18px; color: var(--text); font-family: var(--greek-font); margin-bottom: 4px; }
+  #morphPopup .mp-lemma   { color: var(--accent2); font-size: 13px; margin-bottom: 2px; }
+  #morphPopup .mp-code    { color: var(--green); font-family: monospace; font-size: 12px; margin-bottom: 4px; }
+  #morphPopup .mp-parsed  { color: var(--muted); font-size: 11px; line-height: 1.6; }
+
+  #statusBar {
+    background: var(--surface2); border-top: 1px solid var(--border);
+    padding: 3px 12px; font-size: 11px; color: var(--muted); flex-shrink: 0;
+    display: flex; gap: 16px;
+  }
+  #statusBar span { white-space: nowrap; }
+
+  #helpBar {
+    background: var(--input-bg); border-bottom: 1px solid var(--border);
+    padding: 4px 12px; font-size: 11px; color: var(--muted); flex-shrink: 0;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  #helpBar span { white-space: nowrap; }
+  #helpBar code { background: var(--text); color: var(--bg); padding: 0 3px; border-radius: 2px; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .spinner { display: inline-block; width: 12px; height: 12px;
+    border: 2px solid var(--muted); border-top-color: var(--accent2);
+    border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Help Modal ── */
+  #helpModal {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.55); align-items: center; justify-content: center;
+  }
+  #helpModal.open { display: flex; }
+  #helpModalBox {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    width: min(820px, 95vw); max-height: 88vh; display: flex; flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+  #helpModalHeader {
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;
+    border-radius: 8px 8px 0 0; flex-shrink: 0;
+  }
+  #helpModalHeader h2 { font-size: 14px; font-weight: 700; color: var(--accent2); letter-spacing: 0.5px; }
+  #helpModalClose {
+    background: none; border: none; color: var(--muted); font-size: 18px;
+    cursor: pointer; padding: 0 4px; line-height: 1;
+  }
+  #helpModalClose:hover { color: var(--text); background: none; }
+  #helpModalBody { overflow-y: auto; padding: 16px 20px; }
+  .hm-section { margin-bottom: 20px; }
+  .hm-section h3 {
+    font-size: 12px; font-weight: 700; color: var(--accent2);
+    text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 10px;
+  }
+  .hm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .hm-table th {
+    text-align: left; padding: 4px 10px; background: var(--surface2);
+    color: var(--muted); font-weight: 600; font-size: 11px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hm-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .hm-table tr:last-child td { border-bottom: none; }
+  .hm-table tr:hover td { background: var(--surface2); }
+  .hm-table td:first-child {
+    font-family: 'Times New Roman', serif; font-size: 13px;
+    color: var(--green); white-space: nowrap; width: 220px;
+  }
+  .hm-table td:nth-child(2) { color: var(--muted); width: 220px; }
+  .hm-table td:nth-child(3) { color: var(--text); }
+  .hm-note {
+    font-size: 11px; color: var(--muted); margin-top: 8px;
+    padding: 6px 10px; background: var(--surface2); border-radius: 4px;
+    border-left: 3px solid var(--border);
+  }
+
+  /* Light theme overrides */
+  :root.light .word-span:hover     { background: rgba(26,111,168,0.15); }
+  :root.light .word-span.word-hit  { background: rgba(192,57,43,0.18); color: #8b0000; }
+  :root.light .word-span.word-hit:hover { background: rgba(192,57,43,0.32); }
+  :root.light ::-webkit-scrollbar-track { background: var(--surface2); }
+  :root.light ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* Limit bar */
+  #limitBar {
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    padding: 3px 12px; font-size: 12px; color: var(--muted); flex-shrink: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #limitBar span { color: var(--gold); font-weight: 600; }
+  #limitBar span::before { content: "🔍 Limit: "; font-weight: 400; color: var(--muted); }
+  #limitBar button {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    padding: 1px 7px; font-size: 11px; border-radius: 3px;
+  }
+  #limitBar button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Font-size control widgets */
+  .font-ctrl { display: flex; align-items: center; gap: 4px; }
+  .font-ctrl label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .font-ctrl input[type=range] {
+    width: 64px; height: 4px; cursor: pointer; accent-color: var(--accent2);
+  }
+  .font-ctrl span { font-size: 11px; color: var(--muted); width: 26px; text-align: right; }
+
+  /* Theme toggle */
+  .theme-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .theme-toggle label { font-size: 11px; color: var(--muted); cursor: pointer; user-select: none; }
+  .toggle-track {
+    width: 34px; height: 18px; background: var(--accent); border-radius: 9px;
+    position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle-track.on { background: var(--accent2); }
+  .toggle-thumb {
+    width: 14px; height: 14px; background: #fff; border-radius: 50%;
+    position: absolute; top: 2px; left: 2px; transition: left 0.2s;
+  }
+  .toggle-track.on .toggle-thumb { left: 18px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>📖 BibleSearch</h1>
+  <input id="searchInput" type="text" autocomplete="off" spellcheck="false" dir="auto"
+         placeholder="Search...">
+  <select id="langSelect" onchange="onLangChange()">
+    <option value="grk">Greek (LXX/NT)</option>
+    <option value="heb">Hebrew (OT)</option>
+    <option value="eng">English (BLB)</option>
+  </select>
+  <button onclick="doSearch()">Search</button>
+  <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+  <div style="position:relative; display:inline-block;">
+  <a id="supportBtn" href="https://buymeacoffee.com/reformedretrieval" target="_blank" rel="noopener noreferrer"
+     onclick="bsSupportDismiss('acted')"
+     style="display:inline-flex;align-items:center;gap:5px;
+	 padding:5px 11px;
+            background:var(--accent);
+			border:none;
+			border-radius:3px;
+            font-size:13px;
+			font-weight:600;
+			color:white;
+			text-decoration:none;
+            transition:background 0.15s,color 0.15s;
+			white-space:nowrap;flex-shrink:0;"
+     onmouseover="this.style.background='#c73450';this.style.color='white'"
+     onmouseout="this.style.background='var(--accent)';this.style.color='white'">
+    <svg style="width:14px;height:14px;fill:white;flex-shrink:0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 21h18a1 1 0 0 1 0 2H2a1 1 0 0 1 0-2zM20.242 11.022a1 1 0 0 0-.242-.688 2.99 2.99 0 0 0-2-.734H16V6a3 3 0 0 0-3-3H5a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-2.022h2a3 3 0 0 0 3-3V11.02a1 1 0 0 0-.758-.998zM14 16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v10zm4-4.022V11.6h-2v-2h2a1 1 0 0 1 1 1v1.378a1 1 0 0 1-1 1z"/>
+    </svg>
+    <span>Support</span>
+  </a>
+
+  <div id="supportCallout" role="dialog" aria-label="Support this project">
+    <div class="support-callout-arrow"></div>
+    <p class="support-callout-title">A quick note —</p>
+    <p class="support-callout-body">This project is built and maintained in spare time so that pastors, students,
+      and anyone digging into the original languages can use it for free. If it's been a help to you, would you consider supporting it? Every bit keeps it running for the next person too.</p>
+    <div class="support-callout-actions">
+      <a href="https://buymeacoffee.com/reformedretrieval" target="_blank" rel="noopener noreferrer"
+         class="support-callout-btn support-callout-btn-primary"
+         onclick="bsSupportDismiss('acted')">Yes</a>
+      <button class="support-callout-btn support-callout-btn-secondary"
+              onclick="bsSupportDismiss('later')">Maybe later</button>
+      <button class="support-callout-btn support-callout-btn-text"
+              onclick="bsSupportDismiss('forever')">Don't ask again</button>
+    </div>
+  </div>
+  </div>
+  <div style="width:4px; background:var(--muted); height:22px; margin:0;"></div>
+  <select id="colourSchemeSelect" onchange="setScheme(this.value)"
+          title="Colour scheme"
+          style="font-size:12px; padding:4px 6px;">
+    <option value="default">Default</option>
+    <option value="blue">Blue</option>
+    <option value="yellow">Yellow</option>
+    <option value="red">Red</option>
+    <option value="green">Green</option>
+    <option value="purple">Purple</option>
+    <option value="cream">Cream</option>
+  </select>
+    <div style="width:4px; background:var(--muted); height:22px; margin:0;"></div>
+  <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark theme">
+    <span style="font-size:14px; line-height:1;">🌙</span>
+    <div class="toggle-track" id="themeTrack">
+      <div class="toggle-thumb"></div>
+    </div>
+    <span style="font-size:14px; line-height:1;">☀️</span>
+	</div>
+  </div>
+</div>
+
+<div id="helpBar">
+  <span><code>.</code> AND &nbsp; <code>/</code> OR &nbsp; <code>'</code> phrase &nbsp; <code>!</code> NOT</span>
+  <span><code>*</code> wildcard &nbsp; <code>?</code> single char</span>
+  <span><code>@code</code> morph &nbsp; e.g. <code>.χριστός@n*</code></span>
+  <span><code>;N</code> within N verses</span>
+  <span>Hebrew: Strong's numbers e.g. <code>.1254@vq*</code> or type Hebrew directly</span>
+  <span style="margin-left:auto">
+    <button onclick="document.getElementById('helpModal').classList.add('open')"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+                   padding:2px 10px;font-size:11px;border-radius:3px;cursor:pointer;">
+      ? Quick Reference
+    </button>
+  </span>
+</div>
+
+<div id="limitBar" style="display:none">
+  <span id="limitLabel"></span>
+  <button onclick="clearLimit()" title="Remove limit">✕ Clear</button>
+</div>
+
+<div id="main">
+  <div id="resultsPanel">
+    <div id="resultsHeader">
+      <span id="resultsLabel">Search results</span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span id="resultsCount"></span>
+        <button id="copyBtn" onclick="copyResults()"
+                title="Copy all results to clipboard"
+                style="display:none;background:none;border:1px solid var(--border);
+                       color:var(--muted);padding:1px 7px;font-size:10px;
+                       border-radius:3px;cursor:pointer;white-space:nowrap;">
+          ⎘ Copy
+        </button>
+      </span>
+    </div>
+    <div id="resultsList"></div>
+  </div>
+
+  <div id="browsePanel">
+    <div id="browseNav">
+      <select id="bookSelect" onchange="onBookChange()"></select>
+      <select id="chapterSelect" onchange="onChapterChange()"></select>
+      <select id="verseJumpSelect" onchange="jumpToVerse()"></select>
+      <span id="navRef"></span>
+      <button class="btn-secondary" onclick="navChapter(-1)">◀ Prev</button>
+      <button class="btn-secondary" onclick="navChapter(1)">Next ▶</button>
+      <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+        <div class="font-ctrl" title="Results sidebar font size">
+          <label>Results</label>
+          <input type="range" id="sidebarFontRange" min="10" max="22" value="13"
+                 oninput="setSidebarFont(this.value)">
+          <span id="sidebarFontVal">13px</span>
+        </div>
+        <div class="font-ctrl" title="Browse window font size">
+          <label>Browse</label>
+          <input type="range" id="browseFontRange" min="12" max="32" value="17"
+                 oninput="setBrowseFont(this.value)">
+          <span id="browseFontVal">17px</span>
+        </div>
+        <div style="width:1px; background:var(--border); height:16px;"></div>
+        <div style="display:flex; align-items:center; gap:5px;">
+          <span style="font-size:11px; color:var(--muted);">English</span>
+          <div class="toggle-track" id="englishTrack" onclick="toggleEnglish()"
+               title="Show/hide Berean Literal Bible" style="cursor:pointer;">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+        <div style="width:1px; background:var(--border); height:16px;"></div>
+        <div style="display:flex; align-items:center; gap:5px;">
+          <span style="font-size:11px; color:var(--muted);">Read</span>
+          <div class="toggle-track" id="readTrack" onclick="toggleReadMode()"
+               title="Read mode: paragraph view of whole book" style="cursor:pointer;">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="verseContainer">
+      <div style="color:var(--muted); padding:40px; text-align:center;">
+        Enter a search query above, or browse using the navigation controls.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="statusBar">
+  <span id="statusSearch">Ready</span>
+  <span id="statusVerse"></span>
+  <span style="margin-left:auto; color:#3a4a6a;">MorphGNT + OSHB | BibleWorks-style search</span>
+</div>
+
+<div id="morphPopup">
+  <div class="mp-surface" id="mpSurface"></div>
+  <div class="mp-lemma"   id="mpLemma"></div>
+  <div class="mp-code"    id="mpCode"></div>
+  <div class="mp-parsed"  id="mpParsed"></div>
+</div>
+
+<!-- ── RIGHT-CLICK WORD MENU ── -->
+<div id="wordMenu" style="
+    display:none; position:fixed; z-index:2000;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:5px; box-shadow:0 4px 16px rgba(0,0,0,0.4);
+    min-width:180px; overflow:hidden;">
+  <div id="wordMenuTitle" style="
+      padding:5px 12px; font-size:11px; color:var(--muted);
+      background:var(--surface2); border-bottom:1px solid var(--border);
+      font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+  <div onclick="event.stopPropagation(); contextSearchLemma();" style="
+      padding:7px 14px; font-size:13px; cursor:pointer; color:var(--text);"
+       onmouseover="this.style.background='var(--surface2)'"
+       onmouseout="this.style.background=''">
+    🔍 Search on lemma
+  </div>
+  <div onclick="event.stopPropagation(); contextSearchForm();" style="
+      padding:7px 14px; font-size:13px; cursor:pointer; color:var(--text);"
+       onmouseover="this.style.background='var(--surface2)'"
+       onmouseout="this.style.background=''">
+    🔡 Search on form
+  </div>
+</div>
+
+<!-- ── HELP MODAL ── -->
+<div id="helpModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div id="helpModalBox">
+    <div id="helpModalHeader">
+      <h2>⛪ BibleSearch — Command Line Quick Reference</h2>
+      <button id="helpModalClose" onclick="document.getElementById('helpModal').classList.remove('open')">✕</button>
+    </div>
+    <div id="helpModalBody">
+
+      <div class="hm-section">
+        <h3>Search Operators</h3>
+        <table class="hm-table">
+          <tr><th>Example</th><th>Operator</th><th>What it does</th></tr>
+          <tr><td>.κύριος</td><td>. (AND, default)</td><td>Find every verse containing this word (any form). Single-term search.</td></tr>
+          <tr><td>.κύριος θεός</td><td>. word word</td><td>AND: both words must appear in the same verse.</td></tr>
+          <tr><td>.κύριος !θεός</td><td>! (NOT)</td><td>AND-NOT: κύριος present but θεός absent.</td></tr>
+          <tr><td>'Ἰησοῦς Χριστός</td><td>' (phrase)</td><td>Phrase: words must appear in this exact sequence.</td></tr>
+          <tr><td>/κύριος θεός</td><td>/ (OR)</td><td>Either word may appear in the verse.</td></tr>
+          <tr><td>.κύριος θεός;5</td><td>;N (proximity)</td><td>Both words within N verses of each other.</td></tr>
+          <tr><td>'Ἰησοῦς *2 Χριστός</td><td>*N (gap)</td><td>Phrase with up to N intervening words allowed.</td></tr>
+          <tr><td>(.κύριος).(.θεός)</td><td>( ) compound AND</td><td>AND of two grouped sub-expressions.</td></tr>
+          <tr><td>(.κύριος)./(.θεός)</td><td>( )./( ) compound OR</td><td>OR of two grouped sub-expressions.</td></tr>
+          <tr><td>(.κύριος).!(.θεός)</td><td>( ).!( ) compound NOT</td><td>First group present, second group absent.</td></tr>
+        </table>
+      </div>
+
+      <div class="hm-section">
+        <h3>Wildcards</h3>
+        <table class="hm-table">
+          <tr><th>Example</th><th>Wildcard</th><th>What it does</th></tr>
+          <tr><td>.πιστ*</td><td>* (any sequence)</td><td>Matches any ending: πίστις, πιστεύω, πιστός, etc.</td></tr>
+          <tr><td>.λόγο?</td><td>? (single character)</td><td>Matches exactly one character in that position.</td></tr>
+          <tr><td>.*@vii*</td><td>.* with morph code</td><td>Any word matching the given morphology code.</td></tr>
+        </table>
+      </div>
+
+      <div class="hm-section">
+        <h3>Morphology Codes — Greek</h3>
+        <p class="hm-note">Append @code after a lemma: <strong>.λόγος@n*</strong> &nbsp;|&nbsp; Use * as wildcard within codes: <strong>.*@viia3s</strong></p>
+        <table class="hm-table">
+          <tr><th>Example</th><th>Code pattern</th><th>Meaning</th></tr>
+          <tr><td>.πιστεύω@viia3s</td><td>v + mood + tense + voice + person + number</td><td>Verb, indicative, aorist, active, 3rd singular</td></tr>
+          <tr><td>.λόγος@nnms*</td><td>n + case + gender + number</td><td>Noun, nominative, masculine, singular</td></tr>
+          <tr><td>.*@vp*a*</td><td>vp = participle</td><td>Any participle in active voice</td></tr>
+          <tr><td>.*@vn**</td><td>vn = infinitive</td><td>Any infinitive</td></tr>
+          <tr><td>.*@vi**3p</td><td>3p = 3rd plural</td><td>Any indicative verb, 3rd plural</td></tr>
+        </table>
+        <p class="hm-note">
+          <strong>Mood:</strong> i=indicative &nbsp;d=imperative &nbsp;s=subjunctive &nbsp;o=optative &nbsp;n=infinitive &nbsp;p=participle<br>
+          <strong>Tense:</strong> p=present &nbsp;f=future &nbsp;a=aorist &nbsp;i=imperfect &nbsp;x=perfect &nbsp;y=pluperfect<br>
+          <strong>Voice:</strong> a=active &nbsp;m=middle &nbsp;p=passive &nbsp;e=middle/passive<br>
+          <strong>Case:</strong> n=nom &nbsp;g=gen &nbsp;d=dat &nbsp;a=acc &nbsp;v=voc &nbsp;&nbsp;
+          <strong>Gender:</strong> m=masc &nbsp;f=fem &nbsp;n=neut &nbsp;&nbsp;
+          <strong>Number:</strong> s=sg &nbsp;p=pl
+        </p>
+      </div>
+
+      <div class="hm-section">
+        <h3>Morphology Codes — Hebrew</h3>
+        <p class="hm-note">Hebrew lemmas use Strong's numbers: <strong>.1254@vq*</strong> &nbsp;|&nbsp; Or type Hebrew directly: <strong>.ברא@vqp3ms</strong></p>
+        <table class="hm-table">
+          <tr><th>Example</th><th>Code pattern</th><th>Meaning</th></tr>
+          <tr><td>.1254@vqp3msRq</td><td>v + stem + tense + person + gender + number + Rq</td><td>Verb, Qal, perfect, 3ms (Qere)</td></tr>
+          <tr><td>.430@ncmpa*</td><td>n + type + gender + number + state</td><td>Noun, common, masculine, plural, absolute</td></tr>
+          <tr><td>.*@vqp*</td><td>vqp = Qal perfect</td><td>Any Qal perfect verb</td></tr>
+          <tr><td>.*@vN**</td><td>vN = Niphal</td><td>Any Niphal verb</td></tr>
+          <tr><td>.*@vh**</td><td>vh = Hiphil</td><td>Any Hiphil verb</td></tr>
+        </table>
+        <p class="hm-note">
+          <strong>Stem:</strong> q=Qal &nbsp;N=Niphal &nbsp;p=Piel &nbsp;P=Pual &nbsp;h=Hiphil &nbsp;H=Hophal &nbsp;d=Hithpael<br>
+          <strong>Tense:</strong> p=perfect &nbsp;i=imperfect &nbsp;v=wayyiqtol &nbsp;a=imperative &nbsp;r=ptcp.act &nbsp;s=ptcp.pass &nbsp;e=inf.const &nbsp;f=inf.abs<br>
+          <strong>State:</strong> a=absolute &nbsp;c=construct &nbsp;d=determined &nbsp;&nbsp;
+          <strong>Qere/Kethib:</strong> Rq=Qere &nbsp;Rk=Kethib &nbsp;Rx=both
+        </p>
+      </div>
+
+      <div class="hm-section">
+        <h3>Book Limit Command</h3>
+        <p class="hm-note">Type <strong>l</strong> followed by a book name or range and press Enter. The limit persists until cleared.</p>
+        <table class="hm-table">
+          <tr><th>Example</th><th>Range</th><th>What it limits to</th></tr>
+          <tr><td>l Rom</td><td>Single book</td><td>Romans only</td></tr>
+          <tr><td>l Gen-Deut</td><td>Book range</td><td>Genesis through Deuteronomy</td></tr>
+          <tr><td>l NT</td><td>Named range</td><td>Entire New Testament (Matthew–Revelation)</td></tr>
+          <tr><td>l OT</td><td>Named range</td><td>Entire Old Testament (Genesis–Malachi)</td></tr>
+          <tr><td>l Gospels</td><td>Named range</td><td>Matthew, Mark, Luke, John</td></tr>
+          <tr><td>l Pentateuch</td><td>Named range</td><td>Genesis through Deuteronomy</td></tr>
+          <tr><td>l Torah</td><td>Named range</td><td>Genesis through Deuteronomy</td></tr>
+          <tr><td>l Pauline</td><td>Named range</td><td>Romans through Philemon</td></tr>
+          <tr><td>l 1 Corinthians</td><td>Full name</td><td>1 Corinthians only</td></tr>
+        </table>
+      </div>
+
+      <div class="hm-section">
+        <h3>Greek Keyboard (BW-style)</h3>
+        <p class="hm-note">When a search operator (. ' / !) is typed first, Latin keys are automatically transliterated to Greek.</p>
+        <table class="hm-table">
+          <tr><th>Key</th><th>Greek</th><th>Key</th><th>Greek</th><th>Key</th><th>Greek</th></tr>
+          <tr><td>a</td><td>α</td><td>h</td><td>η</td><td>r</td><td>ρ</td></tr>
+          <tr><td>b</td><td>β</td><td>q</td><td>θ</td><td>s</td><td>σ</td></tr>
+          <tr><td>g</td><td>γ</td><td>i</td><td>ι</td><td>t</td><td>τ</td></tr>
+          <tr><td>d</td><td>δ</td><td>k</td><td>κ</td><td>u</td><td>υ</td></tr>
+          <tr><td>e</td><td>ε</td><td>l</td><td>λ</td><td>f</td><td>φ</td></tr>
+          <tr><td>z</td><td>ζ</td><td>m</td><td>μ</td><td>c</td><td>χ</td></tr>
+          <tr><td>n</td><td>ν</td><td>x</td><td>ξ</td><td>y</td><td>ψ</td></tr>
+          <tr><td>o</td><td>ο</td><td>p</td><td>π</td><td>w</td><td>ω</td></tr>
+          <tr><td>j</td><td>ς (final)</td><td colspan="4"></td></tr>
+        </table>
+      </div>
+
+    </div><!-- /helpModalBody -->
+  </div><!-- /helpModalBox -->
+</div><!-- /helpModal -->
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  TRANSLITERATION — BW keyboard Latin → Greek Unicode
+// ════════════════════════════════════════════════════════════
+const BW_TO_GREEK = {
+  a:'α',b:'β',g:'γ',d:'δ',e:'ε',z:'ζ',h:'η',q:'θ',i:'ι',k:'κ',
+  l:'λ',m:'μ',n:'ν',x:'ξ',o:'ο',p:'π',r:'ρ',s:'σ',t:'τ',u:'υ',
+  f:'φ',c:'χ',y:'ψ',w:'ω',j:'ς'
+};
+
+// BibleWorks-style Hebrew keyboard map (phonetic)
+const BW_TO_HEBREW = {
+  a:'א',b:'ב',g:'ג',d:'ד',h:'ה',w:'ו',z:'ז',x:'ח',j:'ט',y:'י',
+  k:'כ',l:'ל',m:'מ',n:'נ',s:'ס',i:'ע',p:'פ',c:'צ',q:'ק',r:'ר',
+  v:'ש',t:'ת',
+  // Final forms (uppercase)
+  K:'ך',M:'ם',N:'ן',P:'ף',C:'ץ',
+  // Alternates
+  e:'ע',f:'שׁ'
+};
+
+const KEEP_RAW = new Set(['.','\'','/','!',';','(',')','*','?',' ','@','#','0','1','2','3','4','5','6','7','8','9','-']);
+const SEARCH_OPERATORS = new Set(['.', "'", '/', '!', '(']);
+
+function hasOperator(raw) {
+  return [...raw].some(c => SEARCH_OPERATORS.has(c));
+}
+
+// Transliterate a segment using the appropriate map for the language
+function translitSeg(seg, lang) {
+  const map = lang === 'heb' ? BW_TO_HEBREW : BW_TO_GREEK;
+  return seg.split('').map(c => map[c] || c).join('');
+}
+
+function translitQuery(raw, lang) {
+  lang = lang || document.getElementById('langSelect').value;
+  if (!hasOperator(raw)) return raw;
+
+  let result = '', seg = '', afterAt = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (c === '@') {
+      result += translitSeg(seg, lang) + c;
+      seg = ''; afterAt = true; continue;
+    }
+    if (c === ' ' || c === ';') {
+      result += (afterAt ? seg : translitSeg(seg, lang)) + c;
+      seg = ''; afterAt = false; continue;
+    }
+    if (KEEP_RAW.has(c) && !afterAt) {
+      result += translitSeg(seg, lang) + c;
+      seg = ''; continue;
+    }
+    seg += c;
+  }
+  result += afterAt ? seg : translitSeg(seg, lang);
+  return result;
+}
+
+// rawValue stores the BW-keyboard input before transliteration
+let rawValue = '';
+
+// ── Greek/Hebrew input: use beforeinput + keydown for reliable cursor tracking ──
+// This avoids the async confusion of the 'input' event where selectionStart
+// is read AFTER the browser has already modified the value.
+
+function _applyRawChange(el, lang) {
+  const displayed = translitQuery(rawValue, lang);
+  const sel = el.selectionStart;
+  el.value = displayed;
+  const safePos = Math.min(sel, displayed.length);
+  el.setSelectionRange(safePos, safePos);
+}
+
+function onSearchInput(e) {
+  const lang = document.getElementById('langSelect').value;
+  // English: no transliteration, just track value
+  if (lang === 'eng') { rawValue = e.target.value; return; }
+  // Hebrew/Greek: handled by keydown + beforeinput below
+  // Only handle paste/cut/drag-drop here (inputType not covered by beforeinput)
+  if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop' ||
+      !e.inputType || (e.inputType !== 'insertText' &&
+      !e.inputType.startsWith('delete'))) {
+    rawValue = e.target.value;
+  }
+}
+
+function _handleTranslitKeydown(e) {
+  const lang = document.getElementById('langSelect').value;
+  if (lang !== 'grk' && lang !== 'heb') return;
+  if (e.key === 'Enter') return; // handled separately
+
+  const el = e.target;
+  const s  = el.selectionStart;
+  const se = el.selectionEnd;
+
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    if (s !== se) {
+      // Delete selection
+      rawValue = rawValue.slice(0, s) + rawValue.slice(se);
+      _applyRawChange(el, lang);
+      el.setSelectionRange(s, s);
+    } else if (s > 0) {
+      rawValue = rawValue.slice(0, s - 1) + rawValue.slice(s);
+      _applyRawChange(el, lang);
+      el.setSelectionRange(s - 1, s - 1);
+    }
+    return;
+  }
+  if (e.key === 'Delete') {
+    e.preventDefault();
+    if (s !== se) {
+      rawValue = rawValue.slice(0, s) + rawValue.slice(se);
+      _applyRawChange(el, lang);
+      el.setSelectionRange(s, s);
+    } else if (s < rawValue.length) {
+      rawValue = rawValue.slice(0, s) + rawValue.slice(s + 1);
+      _applyRawChange(el, lang);
+      el.setSelectionRange(s, s);
+    }
+    return;
+  }
+}
+
+function _handleTranslitBeforeinput(e) {
+  const lang = document.getElementById('langSelect').value;
+  if (lang !== 'grk' && lang !== 'heb') return;
+  if (e.inputType !== 'insertText' || !e.data) return;
+  e.preventDefault();
+
+  const el = e.target;
+  const s  = el.selectionStart;
+  const se = el.selectionEnd;
+
+  // Remove selection if any
+  if (s !== se) rawValue = rawValue.slice(0, s) + rawValue.slice(se);
+  const insertPos = (s !== se) ? s : s;
+
+  rawValue = rawValue.slice(0, insertPos) + e.data + rawValue.slice(insertPos);
+  _applyRawChange(el, lang);
+  // Move cursor after inserted char (1 raw char = 1 display char always)
+  el.setSelectionRange(insertPos + 1, insertPos + 1);
+}
+
+function onLangChange() {
+  rawValue = '';
+  const el = document.getElementById('searchInput');
+  el.value = '';
+  const lang = document.getElementById('langSelect').value;
+  if (lang === 'grk') {
+    el.placeholder = "Search...";
+  } else if (lang === 'heb') {
+    el.placeholder = "Search...";
+  } else {
+    el.placeholder = "Search...";
+  }
+  // Update results list language styling
+  currentResults = [];
+  document.getElementById('resultsList').innerHTML = '';
+  document.getElementById('resultsLabel').textContent = 'Search results';
+  document.getElementById('statusSearch').textContent = 'Ready';
+
+  // If read mode is active, re-render for the new language
+  if (readModeOn) {
+    readModeRenderedBook = null;  // force full re-render
+    renderReadMode(currentBook);
+  }
+}
+
+// Return the raw BW-keyboard value for sending to the API
+// (API expects BW keyboard / untransliterated for Greek, or Hebrew/Strong's for Hebrew)
+function getSearchQuery() {
+  const lang = document.getElementById('langSelect').value;
+  if (lang === 'grk') return rawValue;
+  return document.getElementById('searchInput').value;
+}
+
+// ════════════════════════════════════════════════════════════
+//  WORD-LEVEL HIGHLIGHTING
+// ════════════════════════════════════════════════════════════
+let currentSearchNorms = [];   // normalized patterns extracted from last search
+let currentSearchLang  = 'grk';
+
+function stripAccentsJS(s) {
+  // NFD decompose, remove combining marks, lowercase, fold final sigma
+  return s.normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/ς/g, 'σ');
+}
+
+function stripNiqqudJS(s) {
+  return s.normalize('NFD')
+          .replace(/[\u0591-\u05C7]/g, '')
+          .toLowerCase();
+}
+
+// Extract normalized search terms from a raw query string
+function extractNorms(rawQuery, lang) {
+  // Remove morph codes (@...) then split on operators
+  const noMorph = rawQuery.replace(/@[^\s().]*/g, '');
+  const tokens  = noMorph.replace(/[.'/!;()*?]/g, ' ').split(/\s+/).filter(t => t.length > 0);
+  return tokens.map(t => lang === 'grk' ? stripAccentsJS(translitSeg(t)) : stripNiqqudJS(t));
+}
+
+function termMatchesNorm(norm, term) {
+  if (!term) return false;
+  // Wildcard pattern: * -> \w* (word chars only), ? -> \w
+  if (term.includes('*') || term.includes('?') || term.includes('%')) {
+    const pat = term
+      .replace(/[.+^${}()|[\\]]/g, '\\$&')
+      .replace(/\*/g, '.*').replace(/%/g, '.*')
+      .replace(/\?/g, '.').replace(/_/g, '.');
+    try { return new RegExp('^' + pat + '$').test(norm); } catch(e) { return false; }
+  }
+  return norm === term;
+}
+
+function wordNormMatches(surfNorm, lemmaNorm) {
+  // Greek: match against currentHlTerms (normalized text), with wildcard support
+  const termHit = currentHlTerms.some(n => {
+    if (!n) return false;
+    return termMatchesNorm(surfNorm, n) || termMatchesNorm(lemmaNorm, n)
+        || lemmaNorm.startsWith(n);  // Hebrew Strong's prefix
+  });
+  if (termHit) return true;
+  // Hebrew: match against currentHlStrongs (Strong's numbers)
+  if (currentHlStrongs.length) return currentHlStrongs.includes(lemmaNorm);
+  return false;
+}
+
+function applyWordHighlights() {
+  if (!currentHlTerms.length && !currentHlStrongs.length) return;
+  document.querySelectorAll('.word-span').forEach(span => {
+    const sn = span.dataset.surfaceNorm || '';
+    const ln = span.dataset.lemmaNorm  || '';
+    if (wordNormMatches(sn, ln)) {
+      span.classList.add('word-hit');
+    } else {
+      span.classList.remove('word-hit');
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  MORPH CODE PARSING  (for popup)
+// ════════════════════════════════════════════════════════════
+const GRK_POS   = {v:'Verb',n:'Noun',a:'Adjective',r:'Pronoun',d:'Article',c:'Conjunction',p:'Preposition',b:'Adverb',i:'Interjection',x:'Particle'};
+const GRK_MOOD  = {i:'Indicative',d:'Imperative',s:'Subjunctive',o:'Optative',n:'Infinitive',p:'Participle'};
+const GRK_TENSE = {p:'Present',f:'Future',a:'Aorist',i:'Imperfect',x:'Perfect',y:'Pluperfect'};
+const GRK_VOICE = {a:'Active',m:'Middle',p:'Passive',e:'Middle/Passive'};
+const GRK_CASE  = {n:'Nominative',g:'Genitive',d:'Dative',a:'Accusative',v:'Vocative'};
+const GRK_GEND  = {m:'Masculine',f:'Feminine',n:'Neuter'};
+const GRK_NUM   = {s:'Singular',p:'Plural'};
+const GRK_PER   = {'1':'1st','2':'2nd','3':'3rd'};
+const HEB_STEM  = {q:'Qal',N:'Niphal',p:'Piel',P:'Pual',h:'Hiphil',H:'Hophal',d:'Hithpael',V:'Hithpoel',v:'Polel',t:'Hishtaphel',T:'Hithpolel'};
+const HEB_TNS   = {p:'Perfect',i:'Imperfect',v:'Wayyiqtol',c:'Cohortative',j:'Jussive',w:'Vav-consec.',a:'Imperative',r:'Ptcp. Active',s:'Ptcp. Passive',f:'Inf. Absolute',e:'Inf. Construct'};
+const HEB_POS   = {v:'Verb',n:'Noun',a:'Adjective',p:'Pronoun',c:'Conjunction',r:'Relative',t:'Particle',k:'Preposition',d:'Adverb',m:'Number',s:'Suffix'};
+
+function parseMorphCode(code, lang) {
+  if (!code || code === '????') return [];
+  const parts = [];
+  if (lang === 'grk') {
+    const pos = code[0];
+    parts.push(['Part of Speech', GRK_POS[pos] || pos]);
+    if (pos === 'v') {
+      const mood = code[1], tns = code[2], voice = code[3];
+      parts.push(['Mood',  GRK_MOOD[mood]  || mood]);
+      parts.push(['Tense', GRK_TENSE[tns]  || tns]);
+      parts.push(['Voice', GRK_VOICE[voice]|| voice]);
+      if (mood === 'p') {
+        parts.push(['Case',   GRK_CASE[code[4]] || code[4]]);
+        parts.push(['Gender', GRK_GEND[code[5]] || code[5]]);
+        parts.push(['Number', GRK_NUM [code[6]] || code[6]]);
+      } else if (mood !== 'n') {
+        parts.push(['Person', GRK_PER[code[4]] || code[4]]);
+        parts.push(['Number', GRK_NUM[code[5]] || code[5]]);
+      }
+    } else if ('ndar'.includes(pos)) {
+      parts.push(['Case',   GRK_CASE[code[1]] || code[1]]);
+      parts.push(['Gender', GRK_GEND[code[2]] || code[2]]);
+      parts.push(['Number', GRK_NUM [code[3]] || code[3]]);
+    }
+  } else {
+    const clean = code.replace(/R[qkx]$/, '');
+    const pos   = clean[0];
+    const qk    = code.match(/R([qkx])$/);
+    parts.push(['Part of Speech', HEB_POS[pos] || pos]);
+    if (pos === 'v') {
+      parts.push(['Stem',        HEB_STEM[clean[1]] || clean[1]]);
+      parts.push(['Tense/Aspect',HEB_TNS [clean[2]] || clean[2]]);
+      parts.push(['Person',   clean[3]]);
+      parts.push(['Gender',   clean[4]==='m'?'Masculine':clean[4]==='f'?'Feminine':clean[4]]);
+      parts.push(['Number',   clean[5]==='s'?'Singular':clean[5]==='p'?'Plural':clean[5]]);
+    } else if ('na'.includes(pos)) {
+      parts.push(['Gender', clean[2]==='m'?'Masculine':clean[2]==='f'?'Feminine':clean[2]]);
+      parts.push(['Number', clean[3]==='s'?'Singular':clean[3]==='p'?'Plural':clean[3]]);
+      parts.push(['State',  clean[4]==='a'?'Absolute':clean[4]==='c'?'Construct':clean[4]==='d'?'Determined':clean[4]]);
+    }
+    if (qk) parts.push(['Qere/Kethib', qk[1]==='q'?'Qere':qk[1]==='k'?'Kethib':'Both']);
+  }
+  return parts.filter(([k,v]) => v && !['?','????','??'].includes(v));
+}
+
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+let currentResults = [];
+let currentBook = 40, currentChapter = 1;
+let currentLang = 'grk';
+let currentHitRefs = new Set();
+let currentHlTerms   = [];
+let currentHlStrongs = [];
+let allBooks = [];
+let englishVisible = false;  // whether BSB English is shown
+let limitBookFrom = null;   // active book range limit
+let limitBookTo   = null;
+let limitBookLabel = '';
+
+// ════════════════════════════════════════════════════════════
+//  INIT — populate book dropdown
+// ════════════════════════════════════════════════════════════
+async function init() {
+  const res = await fetch('/api/books');
+  allBooks = await res.json();
+  const sel = document.getElementById('bookSelect');
+  allBooks.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.num; opt.textContent = b.name;
+    if (b.num === 40) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  await loadChapters(40);
+  loadChapter(40, 1);
+  bsTrackUsage(false);   // record a "day used" for the support-callout cadence, without counting a search
+}
+
+// ════════════════════════════════════════════════════════════
+//  SUPPORT CALLOUT  (occasional, dismissible ask for financial support)
+//
+//  Cadence: never on first launch; first appears once the person has
+//  actually used the tool (10 searches OR 3 distinct days), then resurfaces
+//  roughly every 24 days if dismissed with "Maybe later". Stops appearing
+//  automatically (though the Support button itself always remains) after
+//  5 "Maybe later" dismissals, or immediately/forever if the person clicks
+//  "Don't ask again" or "Chip in".
+// ════════════════════════════════════════════════════════════
+const BS_DAY_MS   = 20 * 60 * 60 * 1000;
+const BS_FIRST_SEARCH_THRESHOLD = 10;
+const BS_FIRST_DAYS_THRESHOLD   = 3;
+const BS_RESHOW_INTERVAL_DAYS   = 24;
+const BS_MAX_MAYBE_LATER        = 5;
+
+function _bsToday() { return new Date().toISOString().slice(0, 10); }
+
+function bsTrackUsage(countsAsSearch) {
+  if (localStorage.getItem('bs_supportDismissedForever') === '1') return;
+  if (localStorage.getItem('bs_supportActed') === '1') return;
+
+  let searchCount = parseInt(localStorage.getItem('bs_searchCount') || '0', 10);
+  if (countsAsSearch) {
+    searchCount += 1;
+    localStorage.setItem('bs_searchCount', String(searchCount));
+  }
+
+  let days = [];
+  try { days = JSON.parse(localStorage.getItem('bs_daysUsed') || '[]'); } catch (e) { days = []; }
+  const today = _bsToday();
+  if (!days.includes(today)) {
+    days.push(today);
+    localStorage.setItem('bs_daysUsed', JSON.stringify(days));
+  }
+
+  bsMaybeShowSupportCallout(searchCount, days.length);
+}
+
+function bsMaybeShowSupportCallout(searchCount, daysUsed) {
+  if (localStorage.getItem('bs_supportDismissedForever') === '1') return;
+  if (localStorage.getItem('bs_supportActed') === '1') return;
+
+  const maybeLaterCount = parseInt(localStorage.getItem('bs_supportMaybeLaterCount') || '0', 10);
+  if (maybeLaterCount >= BS_MAX_MAYBE_LATER) return;   // stop auto-popping; button stays available
+
+  const lastShown = parseInt(localStorage.getItem('bs_supportLastShown') || '0', 10);
+  const now = Date.now();
+
+  if (lastShown === 0) {
+    // Never shown yet: gate the first appearance on actual usage.
+    if (searchCount >= BS_FIRST_SEARCH_THRESHOLD || daysUsed >= BS_FIRST_DAYS_THRESHOLD) {
+      bsShowSupportCallout();
+    }
+    return;
+  }
+
+  if (now - lastShown >= BS_RESHOW_INTERVAL_DAYS * BS_DAY_MS) {
+    bsShowSupportCallout();
+  }
+}
+
+function bsShowSupportCallout() {
+  const el = document.getElementById('supportCallout');
+  if (!el) return;
+  el.classList.add('open');
+  localStorage.setItem('bs_supportLastShown', String(Date.now()));
+
+  // Dismiss on outside click (doesn't count as "maybe later" -- just closes it).
+  setTimeout(() => document.addEventListener('click', _bsOutsideClickHandler), 0);
+}
+
+function _bsOutsideClickHandler(e) {
+  const el = document.getElementById('supportCallout');
+  const btn = document.getElementById('supportBtn');
+  if (!el || el.contains(e.target) || (btn && btn.contains(e.target))) return;
+  el.classList.remove('open');
+  document.removeEventListener('click', _bsOutsideClickHandler);
+}
+
+function bsSupportDismiss(mode) {
+  document.getElementById('supportCallout').classList.remove('open');
+  document.removeEventListener('click', _bsOutsideClickHandler);
+  if (mode === 'forever') {
+    localStorage.setItem('bs_supportDismissedForever', '1');
+  } else if (mode === 'later') {
+    const c = parseInt(localStorage.getItem('bs_supportMaybeLaterCount') || '0', 10) + 1;
+    localStorage.setItem('bs_supportMaybeLaterCount', String(c));
+  } else if (mode === 'acted') {
+    localStorage.setItem('bs_supportActed', '1');
+  }
+}
+
+async function loadChapters(book) {
+  const res = await fetch(`/api/chapters?book=${book}`);
+  const chapters = await res.json();
+  const sel = document.getElementById('chapterSelect');
+  sel.innerHTML = '';
+  chapters.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = 'Ch. ' + c;
+    sel.appendChild(opt);
+  });
+}
+
+async function onBookChange() {
+  currentBook = parseInt(document.getElementById('bookSelect').value);
+  readBookCache = {};
+  readModeRenderedBook = null;
+  await loadChapters(currentBook);
+  if (readModeOn) {
+    await renderReadMode(currentBook);
+  } else {
+    loadChapter(currentBook, 1);
+  }
+}
+
+function onChapterChange() {
+  loadChapter(currentBook, parseInt(document.getElementById('chapterSelect').value));
+}
+
+function navChapter(delta) {
+  const sel = document.getElementById('chapterSelect');
+  const idx = sel.selectedIndex + delta;
+  if (idx >= 0 && idx < sel.options.length) { sel.selectedIndex = idx; onChapterChange(); }
+}
+
+function jumpToVerse() {
+  const v = document.getElementById('verseJumpSelect').value;
+  if (v) scrollToVerse(v);
+}
+
+// ════════════════════════════════════════════════════════════
+//  BROWSE — load chapter
+// ════════════════════════════════════════════════════════════
+async function loadChapter(book, chapter, scrollToV) {
+  currentBook = book; currentChapter = chapter;
+  // In read mode: scroll if same book already rendered, else re-render then scroll
+  if (readModeOn) {
+    if (readModeRenderedBook === book) {
+      // Book already rendered — scroll to chapter heading then verse
+      const chHead = document.getElementById(`verse-${chapter}-1`);
+      if (chHead) chHead.scrollIntoView({behavior:'smooth', block:'start'});
+      if (scrollToV) setTimeout(() => scrollToVerse(scrollToV, chapter), 350);
+    } else {
+      // Different book — re-render, then scroll
+      await renderReadMode(book);
+      if (scrollToV) setTimeout(() => scrollToVerse(scrollToV, chapter), 500);
+      else {
+        const chHead = document.getElementById(`verse-${chapter}-1`);
+        if (chHead) setTimeout(() => chHead.scrollIntoView({behavior:'smooth',block:'start'}), 400);
+      }
+    }
+    return;
+  }
+  document.getElementById('statusVerse').textContent = 'Loading…';
+
+  const lang    = book <= 39 ? 'heb' : 'grk';
+  currentLang   = lang;
+  const passRes = await fetch(`/api/passage?book=${book}&chapter=${chapter}&lang=${lang}`);
+  const verses  = await passRes.json();
+
+  // Normalize each verse's edition breakdown: 'texts' is present (with >=1
+  // entries) for API responses; fall back to a single-entry list built from
+  // the legacy 'text' field just in case.
+  const editionsOf = v => (v.texts && v.texts.length) ? v.texts
+                          : (v.text ? [{edition: null, label: null, text: v.text}] : []);
+
+  // For OT books, also try to load the LXX (Greek) text of the same
+  // chapter, to be shown as secondary interlinear line(s), like English.
+  // Books with more than one Greek textual tradition (e.g. Judges A/B,
+  // Daniel OG/TH) yield more than one entry per verse here.
+  let lxxByVerse = {};
+  let hasLxx = false;
+  if (book <= 39) {
+    try {
+      const lxxRes  = await fetch(`/api/passage?book=${book}&chapter=${chapter}&lang=grk`);
+      const lxxData = await lxxRes.json();
+      lxxData.forEach(v => {
+        const texts = editionsOf(v).filter(t => t.text);
+        if (texts.length) { lxxByVerse[v.verse] = texts; hasLxx = true; }
+      });
+    } catch (e) { /* LXX not imported -- fine, just skip the line */ }
+  }
+
+  // Verse-jump dropdown
+  const vjSel = document.getElementById('verseJumpSelect');
+  vjSel.innerHTML = '<option value="">↓ verse</option>';
+  verses.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.verse; opt.textContent = 'v.' + v.verse;
+    vjSel.appendChild(opt);
+  });
+
+  // Render placeholder verse blocks
+  const container = document.getElementById('verseContainer');
+  container.innerHTML = '';
+  const bookName = allBooks.find(b => b.num === book)?.name || book;
+  for (const v of verses) {
+    const block = document.createElement('div');
+    block.className = 'verse-block';
+    block.id = `verse-${v.verse}`;
+    const refLine = document.createElement('div');
+    refLine.className = 'verse-ref';
+    refLine.textContent = `${bookName} ${chapter}:${v.verse}`;
+    block.appendChild(refLine);
+
+    // Primary text -- one line per textual edition (usually just one).
+    const textEditions = editionsOf(v);
+    textEditions.forEach(te => {
+      const textLine = document.createElement('div');
+      textLine.className = 'verse-text ' + (lang === 'heb' ? 'hebrew' : 'greek');
+      textLine.dataset.verse = v.verse;
+      textLine.dataset.edition = te.edition || '';
+      if (textEditions.length > 1) {
+        const label = document.createElement('span');
+        label.className = 'lxx-label';
+        label.textContent = (te.label || te.edition || '') + ': ';
+        textLine.appendChild(label);
+      }
+      block.appendChild(textLine);
+    });
+
+    // LXX line(s) -- sit between the original (Hebrew) and English lines,
+    // styled like the English interlinear line, shown/hidden together with it.
+    // One line per LXX edition. Word-spans (for hover/right-click) are
+    // populated by loadLxxWords below.
+    if (hasLxx && lxxByVerse[v.verse]) {
+      lxxByVerse[v.verse].forEach(te => {
+        const lxxLine = document.createElement('div');
+        lxxLine.className = 'verse-lxx hidden';
+        lxxLine.dataset.verse = v.verse;
+        lxxLine.dataset.edition = te.edition || '';
+        const label = document.createElement('span');
+        label.className = 'lxx-label';
+        label.textContent = 'LXX' + (te.label ? ` (${te.label})` : (te.edition ? ` ${te.edition}` : '')) + ':';
+        lxxLine.appendChild(label);
+        block.appendChild(lxxLine);
+      });
+    }
+
+    const engLine = document.createElement('div');
+    engLine.className = 'verse-english hidden';
+    engLine.dataset.verse = v.verse;
+    engLine.textContent = '';
+    block.appendChild(engLine);
+
+    container.appendChild(block);
+  }
+
+  // Sync selectors
+  document.getElementById('bookSelect').value = book;
+  const cSel = document.getElementById('chapterSelect');
+  for (let i = 0; i < cSel.options.length; i++) {
+    if (parseInt(cSel.options[i].value) === chapter) { cSel.selectedIndex = i; break; }
+  }
+  document.getElementById('statusVerse').textContent =
+    `${bookName} ${chapter}  (${verses.length} verses)`;
+
+  // Load word-level data asynchronously (enables morph popups + word highlighting)
+  loadChapterWords(book, chapter, verses);
+  if (hasLxx) loadLxxWords(book, chapter, verses, lxxByVerse);
+
+  // Load English translation if toggle is on
+  if (englishVisible) {
+    loadEnglishForChapter(book, chapter);
+    document.querySelectorAll('.verse-lxx').forEach(el => el.classList.remove('hidden'));
+  }
+}
+
+// Builds tagged word-spans (for hover/right-click/highlighting) into `line`,
+// clearing it first except for any leading label span (edition/"LXX:" tag).
+function _fillWordLine(line, words) {
+  // Preserve a leading .lxx-label element (edition tag), if present.
+  const label = line.querySelector(':scope > .lxx-label');
+  line.innerHTML = '';
+  if (label) line.appendChild(label);
+
+  words.forEach((w, idx) => {
+    const span = document.createElement('span');
+    span.className = 'word-span';
+    span.dataset.surface     = w.surface;
+    span.dataset.surfaceNorm = w.surface_norm || '';
+    span.dataset.lemma       = w.lemma;
+    span.dataset.lemmaNorm   = w.lemma_norm  || '';
+    span.dataset.code        = w.bw_code;
+    span.dataset.lang        = w.lang;
+    span.textContent         = w.surface;
+
+    const sn = w.surface_norm || '';
+    const ln = w.lemma_norm   || '';
+    if ((currentHlTerms.length || currentHlStrongs.length) && wordNormMatches(sn, ln)) {
+      span.classList.add('word-hit');
+    }
+
+    span.addEventListener('mouseenter', showMorph);
+    span.addEventListener('mouseleave', hideMorph);
+    span.addEventListener('contextmenu', e => showWordMenu(e, span));
+    line.appendChild(span);
+    if (idx < words.length - 1) line.appendChild(document.createTextNode(' '));
+  });
+}
+
+async function loadChapterWords(book, chapter, verses) {
+  const container = document.getElementById('verseContainer');
+  const lang = book <= 39 ? 'heb' : 'grk';
+
+  for (const v of verses) {
+    const textLines = container.querySelectorAll(`#verse-${v.verse} .verse-text`);
+    for (const textLine of textLines) {
+      const ed = textLine.dataset.edition || '';
+      const edParam = ed ? `&edition=${encodeURIComponent(ed)}` : '';
+      const res   = await fetch(`/api/verse?book=${book}&chapter=${chapter}&verse=${v.verse}&lang=${lang}${edParam}`);
+      const words = await res.json();
+      _fillWordLine(textLine, words);
+    }
+  }
+}
+
+async function loadLxxWords(book, chapter, verses, lxxByVerse) {
+  const container = document.getElementById('verseContainer');
+
+  for (const v of verses) {
+    if (!lxxByVerse[v.verse]) continue;
+    const lxxLines = container.querySelectorAll(`#verse-${v.verse} .verse-lxx`);
+    for (const lxxLine of lxxLines) {
+      const ed = lxxLine.dataset.edition || '';
+      const edParam = ed ? `&edition=${encodeURIComponent(ed)}` : '';
+      const res   = await fetch(`/api/verse?book=${book}&chapter=${chapter}&verse=${v.verse}&lang=grk${edParam}`);
+      const words = await res.json();
+      _fillWordLine(lxxLine, words);
+    }
+  }
+}
+
+function scrollToVerse(verse, chapter) {
+  let el;
+  if (readModeOn && chapter) {
+    // In read mode, IDs are unique per chapter: read-v-{ch}-{verse}
+    el = document.getElementById(`read-v-${chapter}-${verse}`);
+  } else if (readModeOn) {
+    // Read mode but no chapter hint — find the first matching verse
+    // in the current chapter if possible
+    el = document.getElementById(`read-v-${currentChapter}-${verse}`)
+      || document.querySelector(`[id^="read-v-"][id$="-${verse}"]`);
+  } else {
+    el = document.getElementById(`verse-${verse}`);
+  }
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ════════════════════════════════════════════════════════════
+//  MORPH POPUP
+// ════════════════════════════════════════════════════════════
+function showMorph(e) {
+  const span  = e.currentTarget;
+  const popup = document.getElementById('morphPopup');
+  const isHeb = span.dataset.lang === 'heb';
+  document.getElementById('mpSurface').textContent = span.dataset.surface;
+  document.getElementById('mpLemma').textContent   = isHeb
+    ? 'Strong\'s: ' + span.dataset.lemma
+    : 'Lemma: '    + span.dataset.lemma;
+  document.getElementById('mpCode').textContent    = 'Code: ' + span.dataset.code;
+  const parsed = parseMorphCode(span.dataset.code, isHeb ? 'heb' : 'grk');
+  document.getElementById('mpParsed').innerHTML    =
+    parsed.map(([k,v]) => `<b style="color:#8899aa">${k}:</b> ${v}`).join('<br>');
+  popup.style.display = 'block';
+}
+
+function hideMorph() {
+  document.getElementById('morphPopup').style.display = 'none';
+}
+
+document.addEventListener('mousemove', e => {
+  const popup = document.getElementById('morphPopup');
+  if (popup.style.display !== 'block') return;
+  popup.style.left = Math.min(e.clientX + 14, window.innerWidth  - 230) + 'px';
+  popup.style.top  = Math.min(e.clientY + 14, window.innerHeight - 170) + 'px';
+});
+
+// ════════════════════════════════════════════════════════════
+//  SEARCH
+// ════════════════════════════════════════════════════════════
+async function doSearch() {
+  let q    = getSearchQuery().trim();
+  const lang = document.getElementById('langSelect').value;
+  if (!q) return;
+  bsTrackUsage(true);
+
+  // Handle language switching: G/Greek, H/Hebrew, E/English
+  const LANG_SWITCH = {
+    'g':'grk','greek':'grk',
+    'h':'heb','hebrew':'heb',
+    'e':'eng','english':'eng',
+  };
+  if (LANG_SWITCH[q.toLowerCase()]) {
+    const newLang = LANG_SWITCH[q.toLowerCase()];
+    document.getElementById('langSelect').value = newLang;
+    onLangChange();
+    const names = {grk:'Greek', heb:'Hebrew', eng:'English'};
+    document.getElementById('statusSearch').textContent = `Switched to ${names[newLang]}`;
+    return;
+  }
+
+  // Handle bare reference navigation: "John 3:16", "Josh 1:1", "Ps 23"
+  const ref = tryParseReference(q);
+  if (ref) {
+    // Find book in allBooks and set selector
+    const bookOpt = [...document.getElementById('bookSelect').options]
+      .find(o => parseInt(o.value) === ref.book);
+    if (bookOpt) {
+      document.getElementById('bookSelect').value = ref.book;
+      await loadChapters(ref.book);
+      // Pass verse so read mode can scroll after rendering
+      await loadChapter(ref.book, ref.chapter, ref.verse);
+      if (!readModeOn) setTimeout(() => scrollToVerse(ref.verse), 350);
+      document.getElementById('statusSearch').textContent =
+        `Navigated to ${bookOpt.text} ${ref.chapter}:${ref.verse}`;
+    }
+    return;
+  }
+
+  // Handle "l Book" limit command
+  const limitStr = extractLimitCmd(q);
+  if (limitStr !== null) {
+    const ok = await applyLimitCommand(limitStr);
+    if (ok) {
+      document.getElementById('searchInput').value = '';
+      rawValue = '';
+      document.getElementById('statusSearch').textContent = `Limit set: ${limitBookLabel}`;
+    }
+    return;
+  }
+
+  document.getElementById('statusSearch').innerHTML = '<span class="spinner"></span> Searching…';
+  document.getElementById('resultsLabel').textContent = 'Searching…';
+  document.getElementById('resultsList').innerHTML = '';
+
+  if (lang === 'eng' && !englishVisible) {
+    englishVisible = true;
+    document.getElementById('englishTrack').classList.add('on');
+    localStorage.setItem('bw-english', '1');
+  }
+
+  let url = `/api/search?q=${encodeURIComponent(q)}&lang=${lang}`;
+  if (limitBookFrom !== null) url += `&book_from=${limitBookFrom}&book_to=${limitBookTo}`;
+  const res  = await fetch(url);
+  const data = await res.json();
+
+  document.getElementById('statusSearch').textContent = data.error
+    ? '⚠ ' + data.error
+    : `${data.count} hit${data.count !== 1 ? 's' : ''}`;
+  document.getElementById('resultsLabel').textContent = data.error ? 'Error' : 'Results';
+  document.getElementById('resultsCount').textContent = '';
+
+  if (data.error) {
+    document.getElementById('resultsList').innerHTML =
+      `<div style="padding:12px;color:var(--accent);font-size:12px">${data.error}</div>`;
+    document.getElementById('copyBtn').style.display = 'none';
+    return;
+  }
+  if (!data.results.length) {
+    document.getElementById('resultsList').innerHTML =
+      '<div style="padding:12px;color:var(--muted);font-size:12px">No results found.</div>';
+    document.getElementById('copyBtn').style.display = 'none';
+    return;
+  }
+  document.getElementById('copyBtn').style.display = 'inline-block';
+
+  currentResults = data.results;
+  currentSearchLang = lang;
+
+  // Store highlight info returned by server
+  currentHlTerms   = data.hl_terms   || [];
+  currentHlStrongs = data.hl_strongs || [];
+
+  // Build verse-hit key set
+  currentHitRefs = new Set(data.results.map(r => r.book * 1000000 + r.chapter * 1000 + r.verse));
+
+  // Populate results list
+  const list = document.getElementById('resultsList');
+  list.innerHTML = '';
+  data.results.forEach((r, i) => {
+    const item  = document.createElement('div');
+    item.className = 'result-item';
+    const isHeb = r.book <= 39;
+    item.innerHTML = `<div class="result-ref">${r.ref}</div>
+      <div class="result-text ${isHeb?'hebrew':'greek'}">${r.text.substring(0,100)}${r.text.length>100?'…':''}</div>`;
+    item.addEventListener('click', async () => {
+      document.querySelectorAll('.result-item').forEach(el => el.classList.remove('active'));
+      item.classList.add('active');
+      await loadChapter(r.book, r.chapter);
+      setTimeout(() => scrollToVerse(r.verse, r.chapter), 300);
+    });
+    list.appendChild(item);
+  });
+
+  // Auto-navigate to first result
+  const first = data.results[0];
+  list.firstElementChild.classList.add('active');
+  await loadChapter(first.book, first.chapter);
+  setTimeout(() => scrollToVerse(first.verse, first.chapter), 400);
+}
+
+// ════════════════════════════════════════════════════════════
+//  KEY BINDINGS
+// ════════════════════════════════════════════════════════════
+const searchEl = document.getElementById('searchInput');
+searchEl.addEventListener('input',       onSearchInput);
+searchEl.addEventListener('beforeinput',  _handleTranslitBeforeinput);
+searchEl.addEventListener('keydown',      e => {
+  _handleTranslitKeydown(e);
+  if (e.key === 'Enter') doSearch();
+});
+
+// ════════════════════════════════════════════════════════════
+//  ENGLISH TRANSLATION TOGGLE
+// ════════════════════════════════════════════════════════════
+let englishCache  = {};
+let readModeOn           = false;
+let readBookCache        = {};
+let readModeRenderedBook = null;   // which book is currently shown in read mode
+
+function toggleEnglish() {
+  englishVisible = !englishVisible;
+  document.getElementById('englishTrack').classList.toggle('on', englishVisible);
+  localStorage.setItem('bw-english', englishVisible ? '1' : '0');
+
+  if (englishVisible) {
+    loadEnglishForChapter(currentBook, currentChapter);
+    document.querySelectorAll('.verse-lxx').forEach(el => el.classList.remove('hidden'));
+  } else {
+    document.querySelectorAll('.verse-english').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.verse-lxx').forEach(el => el.classList.add('hidden'));
+  }
+}
+
+async function loadEnglishForChapter(book, chapter) {
+  if (!englishVisible) return;
+  const key = `${book}-${chapter}`;
+  if (!englishCache[key]) {
+    const res  = await fetch(`/api/translation?book=${book}&chapter=${chapter}&version=BLB`);
+    englishCache[key] = await res.json();
+  }
+  const data = englishCache[key];
+  const lang = document.getElementById('langSelect').value;
+  document.querySelectorAll('.verse-english').forEach(el => {
+    const verse = el.dataset.verse;
+    const text  = data[verse] || data[parseInt(verse)];
+    if (text) {
+      if (lang === 'eng' && currentHlTerms.length) {
+        el.innerHTML = highlightEnglishText(text, currentHlTerms);
+      } else {
+        el.textContent = text;
+      }
+      el.classList.remove('hidden');
+    }
+  });
+}
+
+function highlightEnglishText(text, terms) {
+  let safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  terms.forEach(term => {
+    if (!term) return;
+    // Use \w* not .* so wildcards only match within a single word (no spaces)
+    const escaped = term
+      .replace(/[.+^${}()|[\\]]/g, '\\$&')
+      .replace(/\*/g, '\\w*')
+      .replace(/\?/g, '\\w');
+    try {
+      const re = new RegExp('\\b(' + escaped + ')\\b', 'gi');
+      safe = safe.replace(re, '<mark style="background:rgba(233,69,96,0.35);border-radius:2px;color:inherit;">$1</mark>');
+    } catch(e) {}
+  });
+  return safe;
+}
+
+// ════════════════════════════════════════════════════════════
+//  REFERENCE NAVIGATION  (type "John 3:16" or "John 3 16" to browse)
+// ════════════════════════════════════════════════════════════
+
+// Book names / abbreviations accepted in a reference — ordered longest-first
+// so "1 Corinthians" matches before "1 Cor" or "Cor"
+const REF_BOOKS = [
+  // Full names
+  ['genesis',1],['exodus',2],['leviticus',3],['numbers',4],['deuteronomy',5],
+  ['joshua',6],['judges',7],['ruth',8],
+  ['1 samuel',9],['2 samuel',10],['1 kings',11],['2 kings',12],
+  ['1 chronicles',13],['2 chronicles',14],['ezra',15],['nehemiah',16],['esther',17],
+  ['job',18],['psalms',19],['psalm',19],['proverbs',20],['ecclesiastes',21],
+  ['songofsolomon',22],['songofsongs',22],['isaiah',23],['jeremiah',24],
+  ['lamentations',25],['ezekiel',26],['daniel',27],['hosea',28],['joel',29],
+  ['amos',30],['obadiah',31],['jonah',32],['micah',33],['nahum',34],
+  ['habakkuk',35],['zephaniah',36],['haggai',37],['zechariah',38],['malachi',39],
+  ['matthew',40],['mark',41],['luke',42],['john',43],['acts',44],['romans',45],
+  ['1 corinthians',46],['2 corinthians',47],['galatians',48],['ephesians',49],
+  ['philippians',50],['colossians',51],['1 thessalonians',52],['2 thessalonians',53],
+  ['1 timothy',54],['2 timothy',55],['titus',56],['philemon',57],['hebrews',58],
+  ['james',59],['1 peter',60],['2 peter',61],['1 john',62],['2 john',63],
+  ['3 john',64],['jude',65],['revelation',66],
+  // Common abbreviations
+  ['gen',1],['exod',2],['ex',2],['lev',3],['lv',3],['num',4],['nu',4],
+  ['deut',5],['dt',5],['de',5],['josh',6],['jos',6],['judg',7],['jdg',7],
+  ['rth',8],['ru',8],['1sam',9],['1sa',9],['2sam',10],['2sa',10],
+  ['1kgs',11],['1ki',11],['2kgs',12],['2ki',12],
+  ['1chr',13],['1ch',13],['2chr',14],['2ch',14],
+  ['ezr',15],['neh',16],['ne',16],['esth',17],['es',17],
+  ['jb',18],['ps',19],['psa',19],['pss',19],['prov',20],['pr',20],
+  ['eccl',21],['ec',21],['song',22],['ss',22],['sg',22],
+  ['isa',23],['is',23],['jer',24],['je',24],['lam',25],['la',25],
+  ['ezek',26],['eze',26],['dan',27],['da',27],['dn',27],
+  ['hos',28],['ho',28],['jl',29],['joe',29],['am',30],['ob',31],
+  ['jon',32],['mic',33],['mi',33],['nah',34],['na',34],
+  ['hab',35],['hb',35],['zeph',36],['zp',36],['hag',37],['hg',37],
+  ['zech',38],['zc',38],['mal',39],['ml',39],
+  ['matt',40],['mt',40],['mat',40],['mrk',41],['mk',41],['mar',41],
+  ['lk',42],['luk',42],['lu',42],['jn',43],['joh',43],['jhn',43],
+  ['ac',44],['act',44],['rom',45],['ro',45],['rm',45],
+  ['1cor',46],['1co',46],['2cor',47],['2co',47],
+  ['gal',48],['ga',48],['eph',49],['php',50],['phil',50],['ph',50],
+  ['col',51],['1thess',52],['1th',52],['2thess',53],['2th',53],
+  ['1tim',54],['1ti',54],['2tim',55],['2ti',55],['tit',56],['ti',56],
+  ['phlm',57],['phm',57],['heb',58],['jas',59],['jm',59],['jam',59],
+  ['1pet',60],['1pe',60],['1pt',60],['2pet',61],['2pe',61],['2pt',61],
+  ['1jn',62],['1jo',62],['2jn',63],['2jo',63],['3jn',64],['3jo',64],
+  ['jud',65],['jd',65],['rev',66],['re',66],['rv',66],
+  // Spaced number prefixes
+  ['1 sam',9],['2 sam',10],['1 kgs',11],['2 kgs',12],
+  ['1 chr',13],['2 chr',14],
+  ['1 cor',46],['2 cor',47],
+  ['1 thess',52],['2 thess',53],
+  ['1 tim',54],['2 tim',55],
+  ['1 pet',60],['2 pet',61],
+  ['1 jn',62],['2 jn',63],['3 jn',64],
+  ['1 sa',9],['2 sa',10],['1 ki',11],['2 ki',12],
+  ['1 co',46],['2 co',47],
+  ['1 th',52],['2 th',53],
+  ['1 ti',54],['2 ti',55],
+  ['1 pe',60],['2 pe',61],
+  ['1 jo',62],['2 jo',63],['3 jo',64],
+].sort((a,b) => b[0].length - a[0].length);  // longest first to avoid prefix ambiguity
+
+function tryParseReference(raw) {
+  // Accept: "John 3:16", "John 3 16", "Josh 1:1", "1 Cor 3:2", "Ps 23"
+  // Must not start with a search operator
+  if (!raw.trim() || SEARCH_OPERATORS.has(raw.trim()[0])) return null;
+
+  // Normalise: lowercase, collapse spaces
+  const s = raw.trim().toLowerCase().replace(/\s+/g, ' ');
+
+  // Try each book name
+  for (const [abbr, bnum] of REF_BOOKS) {
+    if (!s.startsWith(abbr)) continue;
+    const after = s.slice(abbr.length).trim();
+    if (!after) continue;                          // book name only — no chapter
+    // after should be "3:16", "3 16", "3", etc.
+    const m = after.match(/^(\d+)[:\s](\d+)$/) || after.match(/^(\d+)$/);
+    if (!m) continue;
+    const ch = parseInt(m[1]);
+    const vs = m[2] ? parseInt(m[2]) : 1;
+    return { book: bnum, chapter: ch, verse: vs };
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════════════
+//  READ MODE
+// ════════════════════════════════════════════════════════════
+
+async function toggleReadMode() {
+  readModeOn = !readModeOn;
+  document.getElementById('readTrack').classList.toggle('on', readModeOn);
+  localStorage.setItem('bw-readmode', readModeOn ? '1' : '0');
+  if (readModeOn) {
+    await renderReadMode(currentBook);
+  } else {
+    readModeRenderedBook = null;
+    loadChapter(currentBook, currentChapter);
+  }
+}
+
+async function renderReadMode(book) {
+  readModeRenderedBook = book;   // track which book is currently rendered
+  const container  = document.getElementById('verseContainer');
+  const selectedLang = document.getElementById('langSelect').value;
+  let lang;
+  if (selectedLang === 'grk') lang = 'grk';
+  else if (selectedLang === 'heb' && book <= 39) lang = 'heb';
+  else lang = (book <= 39 ? 'heb' : 'grk');   // covers English mode, and 'heb' selected on a book with no Hebrew
+  const langClass  = lang === 'heb' ? 'hebrew' : 'greek';
+  const bookName   = allBooks.find(b => b.num === book)?.name || book;
+
+  container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">Loading book…</div>';
+
+  // Fetch all chapters for this book
+  const chapRes    = await fetch(`/api/chapters?book=${book}`);
+  const chapters   = await chapRes.json();
+
+  // Show English if language selector is set to English,
+  // otherwise show the original language (Greek/Hebrew) for this book.
+  const showEnglish = document.getElementById('langSelect').value === 'eng';
+
+  container.innerHTML = '';
+
+  // Book heading
+  const bookHead = document.createElement('div');
+  bookHead.className = 'read-book-heading';
+  bookHead.textContent = bookName;
+  container.appendChild(bookHead);
+
+  // Each verse's edition breakdown ('texts', >1 entries for dual-tradition
+  // books like Judges A/B, Daniel OG/TH); fall back to the legacy 'text' field.
+  const editionsOf = v => (v.texts && v.texts.length) ? v.texts.filter(t => t.text)
+                          : (v.text ? [{edition: null, label: null, text: v.text}] : []);
+
+  for (const ch of chapters) {
+    // Chapter heading
+    const chHead = document.createElement('div');
+    chHead.className = 'read-chapter-heading';
+    chHead.id = `verse-${ch}-1`;    // allow scrolling to chapter start
+    chHead.textContent = `Chapter ${ch}`;
+    container.appendChild(chHead);
+
+    // Fetch verses for this chapter
+    const cacheKey = `${book}-${ch}-${lang}`;
+    let verseData;
+    if (readBookCache[cacheKey]) {
+      verseData = readBookCache[cacheKey];
+    } else {
+      const res  = await fetch(`/api/passage?book=${book}&chapter=${ch}&lang=${lang}`);
+      verseData  = await res.json();
+      readBookCache[cacheKey] = verseData;
+    }
+
+    // When Hebrew is the primary text for this OT book, also try to fetch
+    // the LXX (Greek) text for this chapter, to render as secondary
+    // paragraph(s) styled like the English rendering, right after Hebrew.
+    // (If Greek was selected as the primary language, it's already the
+    // main paragraph above, so no secondary LXX paragraph is needed.)
+    let lxxVerseData = null;
+    if (!showEnglish && lang === 'heb') {
+      const lxxCacheKey = `${book}-${ch}-grk`;
+      if (readBookCache[lxxCacheKey]) {
+        lxxVerseData = readBookCache[lxxCacheKey];
+      } else {
+        const lxxRes = await fetch(`/api/passage?book=${book}&chapter=${ch}&lang=grk`);
+        lxxVerseData = await lxxRes.json();
+        readBookCache[lxxCacheKey] = lxxVerseData;
+      }
+      if (!lxxVerseData.some(v => v.text)) lxxVerseData = null;
+    }
+
+    if (showEnglish) {
+      // Fetch English text for this chapter
+      if (!englishCache[cacheKey]) {
+        const er = await fetch(`/api/translation?book=${book}&chapter=${ch}&version=BLB`);
+        englishCache[cacheKey] = await er.json();
+      }
+
+      // Build English paragraph
+      const para = document.createElement('div');
+      para.className = 'read-para';
+      para.dataset.book    = book;
+      para.dataset.chapter = ch;
+      for (const v of verseData) {
+        const numSpan = document.createElement('span');
+        numSpan.className    = 'read-versenum';
+        numSpan.textContent  = v.verse;
+        numSpan.id           = `read-v-${ch}-${v.verse}`;
+        para.appendChild(numSpan);
+        const engData = englishCache[cacheKey] || {};
+        const engText = engData[v.verse] || engData[String(v.verse)] || '';
+        const tspan   = document.createElement('span');
+        tspan.textContent = engText + ' ';
+        tspan.dataset.verse = v.verse;
+        para.appendChild(tspan);
+        para.appendChild(document.createTextNode(' '));
+      }
+      container.appendChild(para);
+    } else {
+      // One paragraph per textual edition of the primary language
+      // (usually just one -- more for books like Judges A/B).
+      const editionSet = [];
+      verseData.forEach(v => editionsOf(v).forEach(te => {
+        if (!editionSet.some(e => e.edition === te.edition)) editionSet.push({edition: te.edition, label: te.label});
+      }));
+
+      editionSet.forEach(edInfo => {
+        const idPrefix = edInfo.edition ? `read-v-${edInfo.edition}` : 'read-v';
+        const para = document.createElement('div');
+        para.className = `read-para ${langClass}`;
+        para.dataset.book    = book;
+        para.dataset.chapter = ch;
+        if (edInfo.edition) para.dataset.edition = edInfo.edition;
+
+        if (editionSet.length > 1) {
+          const label = document.createElement('span');
+          label.className = 'lxx-label';
+          label.textContent = (edInfo.label || edInfo.edition || '') + ': ';
+          para.appendChild(label);
+        }
+
+        for (const v of verseData) {
+          const te = editionsOf(v).find(t => t.edition === edInfo.edition);
+          if (!te) continue;
+          const numSpan = document.createElement('span');
+          numSpan.className    = 'read-versenum';
+          numSpan.textContent  = v.verse;
+          numSpan.id           = `${idPrefix}-${ch}-${v.verse}`;  // unique across chapters
+          para.appendChild(numSpan);
+
+          // Word spans (same as normal view, for morph popup + highlighting)
+          const words = te.text.split(' ');
+          words.forEach((w, idx) => {
+            const span          = document.createElement('span');
+            span.className      = 'word-span read-word';
+            span.dataset.surface = w;
+            span.dataset.lang    = lang;
+            span.textContent     = w;
+            span.addEventListener('mouseenter', showMorph);
+            span.addEventListener('mouseleave', hideMorph);
+            span.addEventListener('contextmenu', e => showWordMenu(e, span));
+            para.appendChild(span);
+            if (idx < words.length - 1) para.appendChild(document.createTextNode(' '));
+          });
+          // Word-level data (morph codes) loaded lazily below
+          para.appendChild(document.createTextNode(' '));
+        }
+
+        container.appendChild(para);
+        loadReadModeWordData(book, ch, para, lang, edInfo.edition, idPrefix);
+      });
+    }
+
+    // LXX paragraph(s) -- styled like English, placed right after Hebrew,
+    // before where the English paragraph would go on a later toggle.
+    // Uses word-spans (like the main paragraph) so hover/right-click work,
+    // with their own verse-number id prefix ("lxx-v-...") to avoid colliding
+    // with the main paragraph's "read-v-..." ids. One paragraph per LXX
+    // edition (e.g. Judges A / Judges B).
+    if (lxxVerseData) {
+      const lxxEditionSet = [];
+      lxxVerseData.forEach(v => editionsOf(v).forEach(te => {
+        if (!lxxEditionSet.some(e => e.edition === te.edition)) lxxEditionSet.push({edition: te.edition, label: te.label});
+      }));
+
+      lxxEditionSet.forEach(edInfo => {
+        const idPrefix = edInfo.edition ? `lxx-v-${edInfo.edition}` : 'lxx-v';
+        const lxxPara = document.createElement('div');
+        lxxPara.className = 'read-para greek english-para';
+        lxxPara.dataset.book = book;
+        lxxPara.dataset.chapter = ch;
+        if (edInfo.edition) lxxPara.dataset.edition = edInfo.edition;
+        const lxxLabel = document.createElement('span');
+        lxxLabel.className = 'lxx-label';
+        lxxLabel.textContent = 'LXX' + (edInfo.label ? ` (${edInfo.label})` : (edInfo.edition ? ` ${edInfo.edition}` : '')) + ' ';
+        lxxPara.appendChild(lxxLabel);
+        lxxVerseData.forEach(v => {
+          const te = editionsOf(v).find(t => t.edition === edInfo.edition);
+          if (!te) return;
+          const numSpan = document.createElement('span');
+          numSpan.className = 'read-versenum';
+          numSpan.textContent = v.verse;
+          numSpan.id = `${idPrefix}-${ch}-${v.verse}`;
+          lxxPara.appendChild(numSpan);
+          const words = te.text.split(' ');
+          words.forEach((w, idx) => {
+            const span = document.createElement('span');
+            span.className = 'word-span read-word';
+            span.dataset.surface = w;
+            span.dataset.lang    = 'grk';
+            span.textContent     = w;
+            span.addEventListener('mouseenter', showMorph);
+            span.addEventListener('mouseleave', hideMorph);
+            span.addEventListener('contextmenu', e => showWordMenu(e, span));
+            lxxPara.appendChild(span);
+            if (idx < words.length - 1) lxxPara.appendChild(document.createTextNode(' '));
+          });
+          lxxPara.appendChild(document.createTextNode(' '));
+        });
+        container.appendChild(lxxPara);
+        loadReadModeWordData(book, ch, lxxPara, 'grk', edInfo.edition, idPrefix);
+      });
+    }
+  }
+
+  // Update verse-jump dropdown to chapters instead of verses
+  const vjSel = document.getElementById('verseJumpSelect');
+  vjSel.innerHTML = '<option value="">↓ chapter</option>';
+  chapters.forEach(ch => {
+    const opt = document.createElement('option');
+    opt.value = `${ch}-1`; opt.textContent = `Ch. ${ch}`;
+    vjSel.appendChild(opt);
+  });
+}
+
+async function loadReadModeWordData(book, chapter, para, lang, edition, idPrefix) {
+  // Fetch word-level data and replace plain text spans with tagged spans.
+  // `edition` (optional) selects one textual tradition (e.g. 'A', 'B') for
+  // dual-tradition books; `idPrefix` (defaults to 'read-v') must match the
+  // verse-number id prefix used when the paragraph's plain-text spans were
+  // built, so the same paragraph can host multiple editions without their
+  // ids colliding (e.g. 'read-v-A-3-5' vs 'read-v-B-3-5').
+  idPrefix = idPrefix || 'read-v';
+  const cacheKey = `${book}-${chapter}-${lang}`;
+  let verseData;
+  if (readBookCache[cacheKey]) {
+    verseData = readBookCache[cacheKey];
+  } else {
+    const res = await fetch(`/api/passage?book=${book}&chapter=${chapter}&lang=${lang}`);
+    verseData = await res.json();
+    readBookCache[cacheKey] = verseData;
+  }
+
+  const edParam = edition ? `&edition=${encodeURIComponent(edition)}` : '';
+  for (const v of verseData) {
+    const res   = await fetch(`/api/verse?book=${book}&chapter=${chapter}&verse=${v.verse}&lang=${lang}${edParam}`);
+    const words = await res.json();
+    if (!words.length) continue;
+    // Find versenum span for this verse/edition
+    const numEl = para.querySelector(`#${idPrefix}-${chapter}-${v.verse}`);
+    if (!numEl) continue;
+    // Replace subsequent word spans up to the next versenum
+    const newSpans = [];
+    words.forEach((w, idx) => {
+      const span = document.createElement('span');
+      span.className = 'word-span read-word';
+      span.dataset.surface     = w.surface;
+      span.dataset.surfaceNorm = w.surface_norm || '';
+      span.dataset.lemma       = w.lemma;
+      span.dataset.lemmaNorm   = w.lemma_norm  || '';
+      span.dataset.code        = w.bw_code;
+      span.dataset.lang        = w.lang;
+      span.textContent         = w.surface;
+      // Apply word highlight if search active
+      if ((currentHlTerms.length || currentHlStrongs.length) &&
+           wordNormMatches(w.surface_norm||'', w.lemma_norm||'')) {
+        span.classList.add('word-hit');
+      }
+      span.addEventListener('mouseenter', showMorph);
+      span.addEventListener('mouseleave', hideMorph);
+      span.addEventListener('contextmenu', e => showWordMenu(e, span));
+      newSpans.push(span);
+      if (idx < words.length - 1) newSpans.push(document.createTextNode(' '));
+    });
+    newSpans.push(document.createTextNode(' '));
+    // Remove old plain-text word nodes and insert new tagged ones
+    const toRemove = [];
+    let n = numEl.nextSibling;
+    while (n && !(n.nodeType === 1 && n.classList.contains('read-versenum'))) {
+      toRemove.push(n); n = n.nextSibling;
+    }
+    toRemove.forEach(el => el.remove());
+    const insertBefore = n || null;
+    newSpans.forEach(s => para.insertBefore(s, insertBefore));
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  BOOK RANGE LIMIT  (BW-style "l" command)
+// ════════════════════════════════════════════════════════════
+
+// Parse "l Book" or "l Book1-Book2" from the front of the query string.
+// Returns { limitStr, remainder } or null.
+function extractLimitCmd(q) {
+  // Match: starts with optional whitespace, then 'l ' or 'l' followed by book name
+  const m = q.match(/^l\s+(.+)$/i);
+  if (!m) return null;
+  return m[1].trim();
+}
+
+async function applyLimitCommand(limitStr) {
+  const res  = await fetch(`/api/resolve_limit?q=${encodeURIComponent(limitStr)}`);
+  const data = await res.json();
+  if (data.error) {
+    document.getElementById('statusSearch').textContent = '⚠ ' + data.error;
+    return false;
+  }
+  limitBookFrom  = data.book_from;
+  limitBookTo    = data.book_to;
+  limitBookLabel = data.label;
+  showLimitBar();
+  localStorage.setItem('bw-limit', JSON.stringify({from: limitBookFrom, to: limitBookTo, label: limitBookLabel}));
+  return true;
+}
+
+function showLimitBar() {
+  const bar = document.getElementById('limitBar');
+  if (limitBookFrom !== null) {
+    document.getElementById('limitLabel').textContent = limitBookLabel;
+    bar.style.display = 'flex';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function clearLimit() {
+  limitBookFrom = null; limitBookTo = null; limitBookLabel = '';
+  showLimitBar();
+  localStorage.removeItem('bw-limit');
+  document.getElementById('statusSearch').textContent = 'Limit cleared';
+}
+
+// ════════════════════════════════════════════════════════════
+//  THEME & FONT SIZE CONTROLS
+// ════════════════════════════════════════════════════════════
+let isLight = false;
+
+let currentScheme = 'default';
+
+const SCHEME_NAMES = ['default','blue','yellow','red','green','purple','cream'];
+const ALL_SCHEME_CLASSES = [
+  'light','light-blue','light-yellow','light-red','light-green','light-purple','light-cream',
+  'dark-blue','dark-yellow','dark-red','dark-green','dark-purple','dark-cream'
+];
+
+function applyScheme(scheme, light) {
+  const root = document.documentElement;
+  root.classList.remove(...ALL_SCHEME_CLASSES);
+  if (light) {
+    root.classList.add(scheme === 'default' ? 'light' : 'light-' + scheme);
+  } else {
+    if (scheme !== 'default') root.classList.add('dark-' + scheme);
+  }
+
+}
+
+function setScheme(scheme) {
+  currentScheme = scheme;
+  applyScheme(scheme, isLight);
+  const sel = document.getElementById('colourSchemeSelect');
+  if (sel) sel.value = scheme;
+  localStorage.setItem('bw-scheme', scheme);
+}
+
+function toggleTheme() {
+  isLight = !isLight;
+  applyScheme(currentScheme, isLight);
+  document.getElementById('themeTrack').classList.toggle('on', isLight);
+  localStorage.setItem('bw-theme', isLight ? 'light' : 'dark');
+}
+
+function setSidebarFont(px) {
+  document.documentElement.style.setProperty('--sidebar-font-size', px + 'px');
+  document.getElementById('sidebarFontVal').textContent = px + 'px';
+  localStorage.setItem('bw-sidebar-font', px);
+}
+
+function setBrowseFont(px) {
+  // Hebrew proportionally larger (20/17 ratio); English slightly smaller than Greek
+  const hpx = Math.round(px * 20 / 17);
+  const epx = Math.max(10, Math.round(px * 13 / 17));
+  document.documentElement.style.setProperty('--browse-font-size', px + 'px');
+  document.documentElement.style.setProperty('--browse-hebrew-font-size', hpx + 'px');
+  document.documentElement.style.setProperty('--browse-english-font-size', epx + 'px');
+  document.getElementById('browseFontVal').textContent = px + 'px';
+  localStorage.setItem('bw-browse-font', px);
+}
+
+function restorePrefs() {
+  // Restore colour scheme + light/dark
+  currentScheme = localStorage.getItem('bw-scheme') || 'default';
+  isLight = localStorage.getItem('bw-theme') === 'light';
+  applyScheme(currentScheme, isLight);
+  document.getElementById('themeTrack').classList.toggle('on', isLight);
+  const cSel = document.getElementById('colourSchemeSelect');
+  if (cSel) cSel.value = currentScheme;
+
+  const sf = localStorage.getItem('bw-sidebar-font');
+  if (sf) { document.getElementById('sidebarFontRange').value = sf; setSidebarFont(sf); }
+  const bf = localStorage.getItem('bw-browse-font');
+  if (bf) { document.getElementById('browseFontRange').value = bf; setBrowseFont(bf); }
+
+  const lim = localStorage.getItem('bw-limit');
+  if (lim) {
+    try {
+      const d = JSON.parse(lim);
+      limitBookFrom = d.from; limitBookTo = d.to; limitBookLabel = d.label;
+      showLimitBar();
+    } catch(e) {}
+  }
+
+  if (localStorage.getItem('bw-english') === '1') {
+    englishVisible = true;
+    document.getElementById('englishTrack').classList.add('on');
+  }
+  if (localStorage.getItem('bw-readmode') === '1') {
+    readModeOn = true;
+    document.getElementById('readTrack').classList.add('on');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  COPY RESULTS TO CLIPBOARD
+// ════════════════════════════════════════════════════════════
+async function copyResults() {
+  if (!currentResults.length) return;
+  const btn = document.getElementById('copyBtn');
+  const lines = currentResults.map(r => `${r.ref}\t${r.text}`);
+  const text  = lines.join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '✓ Copied';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = '⎘ Copy'; btn.style.color = ''; }, 2000);
+  } catch(e) {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓ Copied';
+    setTimeout(() => { btn.textContent = '⎘ Copy'; }, 2000);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  RIGHT-CLICK CONTEXT MENU
+// ════════════════════════════════════════════════════════════
+let contextWord = null;
+
+// Saved word data for right-click — stored separately so menu hide can't null them
+let _ctxIsHeb     = false;
+let _ctxLemmaNorm = '';
+let _ctxSurfNorm  = '';
+let _ctxSurface   = '';
+
+function showWordMenu(e, span) {
+  e.preventDefault();
+  e.stopPropagation();   // prevent document click listener from firing on right-click
+  // Save word data immediately — independent of contextWord reference
+  _ctxIsHeb     = span.dataset.lang === 'heb';
+  _ctxLemmaNorm = span.dataset.lemmaNorm || span.dataset.lemma || '';
+  _ctxSurfNorm  = span.dataset.surfaceNorm || '';
+  _ctxSurface   = span.dataset.surface || '';
+
+  document.getElementById('wordMenuTitle').textContent = _ctxSurface;
+  const menu = document.getElementById('wordMenu');
+  const x = Math.min(e.clientX, window.innerWidth  - 190);
+  const y = Math.min(e.clientY, window.innerHeight - 110);
+  menu.style.left    = x + 'px';
+  menu.style.top     = y + 'px';
+  menu.style.display = 'block';
+}
+
+function hideWordMenu() {
+  document.getElementById('wordMenu').style.display = 'none';
+}
+
+function contextSearchLemma() {
+  hideWordMenu();
+  // For both Greek and Hebrew, search by lemmaNorm:
+  //   Greek:  lemmaNorm = accent-stripped dictionary form (e.g. "κυριοσ")
+  //           → finds ALL forms of the lemma across the NT
+  //   Hebrew: lemmaNorm = Strong's number (e.g. "1254")
+  //           → finds all occurrences of that lexeme
+  const query = `.${_ctxLemmaNorm}`;
+  document.getElementById('langSelect').value = _ctxIsHeb ? 'heb' : 'grk';
+  rawValue = query;
+  const qlang = _ctxIsHeb ? 'heb' : 'grk';
+  document.getElementById('searchInput').value = translitQuery(query, qlang);
+  setTimeout(doSearch, 0);
+}
+
+function contextSearchForm() {
+  hideWordMenu();
+  const form  = _ctxSurfNorm || _ctxSurface;
+  const query = `'${form}`;
+  const qlang = _ctxIsHeb ? 'heb' : 'grk';
+  document.getElementById('langSelect').value = qlang;
+  rawValue = query;
+  document.getElementById('searchInput').value = translitQuery(query, qlang);
+  setTimeout(doSearch, 0);
+}
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('wordMenu').contains(e.target)) hideWordMenu();
+});
+
+// ── BOOT ──
+restorePrefs();
+init();
+</script>
+</body>
+</html>
