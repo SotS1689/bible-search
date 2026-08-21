@@ -225,13 +225,15 @@
   #morphPopup {
     position: fixed; background: var(--input-bg); border: 1px solid var(--accent2);
     border-radius: 6px; padding: 10px 14px; font-size: 12px; z-index: 999;
-    min-width: 200px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    min-width: 200px; max-width: 300px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     display: none; pointer-events: none;
   }
   #morphPopup .mp-surface { font-size: 18px; color: var(--text); font-family: var(--greek-font); margin-bottom: 4px; }
   #morphPopup .mp-lemma   { color: var(--accent2); font-size: 13px; margin-bottom: 2px; }
   #morphPopup .mp-code    { color: var(--green); font-family: monospace; font-size: 12px; margin-bottom: 4px; }
   #morphPopup .mp-parsed  { color: var(--muted); font-size: 11px; line-height: 1.6; }
+  #morphPopup .mp-gloss   { color: var(--text); font-size: 11px; line-height: 1.45; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+  #morphPopup .mp-gloss .mp-gloss-head { color: var(--accent2); font-weight: 600; }
 
   #statusBar {
     background: var(--surface2); border-top: 1px solid var(--border);
@@ -513,7 +515,7 @@
 <div id="statusBar">
   <span id="statusSearch">Ready</span>
   <span id="statusVerse"></span>
-  <span style="margin-left:auto; color:#3a4a6a;">MorphGNT + OSHB | BibleWorks-style search</span>
+  <span style="margin-left:auto; color:#3a4a6a;" title="Greek/Hebrew word glosses: STEPBible-Data (TBESG/TBESH), Tyndale House Cambridge &amp; STEPBible.org, CC BY 4.0">MorphGNT + OSHB + TBESG/TBESH | BibleWorks-style search</span>
 </div>
 
 <div id="morphPopup">
@@ -521,6 +523,7 @@
   <div class="mp-lemma"   id="mpLemma"></div>
   <div class="mp-code"    id="mpCode"></div>
   <div class="mp-parsed"  id="mpParsed"></div>
+  <div class="mp-gloss"   id="mpGloss"></div>
 </div>
 
 <!-- ── RIGHT-CLICK WORD MENU ── -->
@@ -1353,6 +1356,9 @@ function scrollToVerse(verse, chapter) {
 // ════════════════════════════════════════════════════════════
 //  MORPH POPUP
 // ════════════════════════════════════════════════════════════
+let _morphHoverToken = 0;
+const _glossCache = {}; // "lang:key" -> gloss object or null, avoids re-fetching on repeat hovers
+
 function showMorph(e) {
   const span  = e.currentTarget;
   const popup = document.getElementById('morphPopup');
@@ -1366,6 +1372,47 @@ function showMorph(e) {
   document.getElementById('mpParsed').innerHTML    =
     parsed.map(([k,v]) => `<b style="color:#8899aa">${k}:</b> ${v}`).join('<br>');
   popup.style.display = 'block';
+
+  const glossEl = document.getElementById('mpGloss');
+  glossEl.style.display = 'none';
+  glossEl.innerHTML = '';
+
+  const lang = isHeb ? 'heb' : 'grk';
+  const key  = span.dataset.lemmaNorm;
+  if (!key) return;
+
+  const token = ++_morphHoverToken;
+  fetchGloss(lang, key).then(g => {
+    // The user may have moved to a different word (or away entirely)
+    // before this resolved -- only apply it if this is still current.
+    if (token !== _morphHoverToken || popup.style.display !== 'block') return;
+    if (!g) return;
+    let meaning = (g.meaning || '').trim();
+    if (meaning.length > 160) meaning = meaning.slice(0, 160).replace(/\s+\S*$/, '') + '…';
+    glossEl.innerHTML =
+      `<span class="mp-gloss-head">${escapeHtml(g.gloss || '')}</span>` +
+      (meaning ? ` — ${escapeHtml(meaning)}` : '');
+    glossEl.style.display = 'block';
+  });
+}
+
+async function fetchGloss(lang, key) {
+  const cacheKey = lang + ':' + key;
+  if (cacheKey in _glossCache) return _glossCache[cacheKey];
+  try {
+    const res  = await fetch(`/api/gloss?lang=${encodeURIComponent(lang)}&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    _glossCache[cacheKey] = data;
+    return data;
+  } catch (err) {
+    return null; // offline/error: hover box still shows morph info, just no gloss
+  }
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 function hideMorph() {
