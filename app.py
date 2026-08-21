@@ -246,6 +246,29 @@ def api_passage():
         out.append({'verse': v, 'text': primary_text, 'texts': texts})
     return jsonify(out)
 
+@app.route('/api/gloss')
+def api_gloss():
+    """Lexicon lookup for word-hover glosses. `key` must already be
+    normalized the same way words.lemma_norm is: accent-stripped lowercase
+    Greek text for lang='grk', or a bare Strong's number string for
+    lang='heb' -- i.e. exactly what the frontend already has on hand as
+    each word-span's `lemmaNorm` dataset attribute, so no extra
+    normalization is needed here."""
+    lang = request.args.get('lang', 'grk')
+    key  = request.args.get('key', '').strip()
+    if not key:
+        return jsonify(None)
+    con = get_con()
+    cur = con.cursor()
+    try:
+        row = cur.execute(
+            "SELECT estrong, translit, gloss, meaning FROM lexicon WHERE lang=? AND key_norm=?",
+            (lang, key)).fetchone()
+    except sqlite3.OperationalError:
+        row = None  # corpus.db predates the lexicon table -- no gloss available
+    con.close()
+    return jsonify(dict(row) if row else None)
+
 @app.route('/api/books')
 def api_books():
     con = get_con()
