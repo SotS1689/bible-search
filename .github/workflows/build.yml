@@ -17,7 +17,7 @@ env:
   # asset's download URL here. This keeps the 129MB DB out of git entirely
   # (GitHub hard-blocks git-committed files over 100MB) while still being
   # free, permanent hosting.
-  CORPUS_DB_URL: "https://github.com/SotS1689/bible-search/releases/download/corpus-v1/corpus.db"
+  CORPUS_DB_URL: "https://github.com/OWNER/REPO/releases/download/corpus-v1/corpus.db"
 
 jobs:
   build:
@@ -40,6 +40,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Install Linux GTK/WebKit dependencies
+        # Linux-only: pywebview's native-window backend here is GTK +
+        # WebKit2GTK. PyGObject (the "gi" Python package, installed via
+        # pip in the next step) is a C extension that needs these dev
+        # headers present to build; gir1.2-webkit2-4.1 provides the actual
+        # runtime bindings it loads. Windows/Mac need no equivalent step --
+        # their native webview components ship with the OS already.
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libgirepository1.0-dev libcairo2-dev pkg-config python3-dev gcc \
+            gir1.2-gtk-3.0 gir1.2-webkit2-4.1
 
       - name: Install dependencies
         run: pip install -r requirements.txt
