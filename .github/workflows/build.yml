@@ -17,7 +17,7 @@ env:
   # asset's download URL here. This keeps the 129MB DB out of git entirely
   # (GitHub hard-blocks git-committed files over 100MB) while still being
   # free, permanent hosting.
-  CORPUS_DB_URL: "https://github.com/OWNER/REPO/releases/download/corpus-v1/corpus.db"
+  CORPUS_DB_URL: "https://github.com/SotS1689/bible-search/releases/download/corpus-v1/corpus.db"
 
 jobs:
   build:
