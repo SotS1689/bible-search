@@ -1,2 +1,23 @@
 flask>=3.0,<4.0
 pyinstaller>=6.10,<7.0
+waitress>=3.0,<4.0
+pywebview>=5.0,<6.0
+
+# pywebview's native-window backend on Windows needs pythonnet to talk to
+# WebView2 (which ships with Windows 10/11 already -- no separate runtime
+# install needed). Not needed on Linux/Mac, hence the marker.
+pythonnet>=3.0; sys_platform == "win32"
+
+# pywebview's macOS backend uses PyObjC to talk to Cocoa/WebKit (both
+# built into macOS already -- these are just the Python bindings to them).
+pyobjc-framework-Cocoa>=10.0; sys_platform == "darwin"
+pyobjc-framework-WebKit>=10.0; sys_platform == "darwin"
+pyobjc-framework-Quartz>=10.0; sys_platform == "darwin"
+
+# pywebview's Linux backend needs GTK + WebKit2GTK's GObject introspection
+# bindings. PyGObject (the "gi" package) itself is installed via pip below,
+# but it's a *binding* to system libraries that must already be present --
+# see .github/workflows/build.yml, which installs them via apt before this
+# runs, and README-DISTRIBUTION.md, which notes the same requirement on an
+# end user's Linux machine (most desktop distros already have these).
+PyGObject>=3.42; sys_platform == "linux"

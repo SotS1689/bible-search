@@ -42,9 +42,10 @@ matrix in `build.yml` is for: it builds all three from one push, for free.
 
 ## What users actually do
 
-Download the file matching their OS, double-click it. A terminal/console
-window opens (this is intentional — see below) and their browser opens to
-the app a moment later. Closing the console window stops the app.
+Download the file matching their OS, double-click it. A native app window
+opens directly (no browser, no console/terminal) with the app already
+loaded. Closing that window quits the app — that's the only quit gesture
+now, there's no console to close instead.
 
 **Expect one security prompt on first run**, since these are unsigned
 binaries:
@@ -59,6 +60,20 @@ Removing this prompt requires paying for a code-signing certificate
 zero-ongoing-cost goal, so it's left as a one-time click-through and
 documented here instead.
 
+**Linux only:** the native window needs WebKit2GTK present on the user's
+machine (most desktop Linux distros already have it, since a lot of
+GTK-based apps depend on it — but it's not guaranteed on a minimal/server
+install). If the app fails to open on someone's Linux machine, that's the
+first thing to check; the fix is just installing their distro's
+`webkit2gtk` package (e.g. `sudo apt install gir1.2-webkit2-4.1` on
+Ubuntu/Debian).
+
+**If something goes wrong on someone's machine:** since there's no
+console anymore, errors don't print anywhere visible. A log file
+(`biblesearch.log`) is written next to the executable instead, and a
+small error popup appears on a fatal startup failure telling the user
+where to find it.
+
 ## Design notes / what changed from the original app
 
 - `src/corpus.py` and `app.py`: path resolution now checks
@@ -68,17 +83,30 @@ documented here instead.
 - `app.py`'s `/api/resolve_limit` had a redundant, PyInstaller-unsafe
   re-computation of `sys.path`; removed (the top-of-file setup already
   covers it).
-- `launch.py` is new: starts the Flask app in a background thread, picks
-  a free port if 7070 is taken, and opens the user's default browser.
-  This is the PyInstaller entry point (not `app.py` directly), so users
-  get an "app that opens," not a bare dev server they have to visit
-  manually.
-- The console window is left visible on purpose for v1: if something
-  goes wrong, the user (or you, over their shoulder) can actually see the
-  traceback instead of the app silently failing to open. Switching to
-  `console=False` in `biblesearch.spec` later is a one-line change once
-  you're confident in stability, at the cost of hiding errors from users
-  entirely.
+- `launch.py`: serves the app via **Waitress** (a real production WSGI
+  server) instead of Flask's built-in dev server, and opens it in a
+  **native app window via pywebview** instead of a browser tab. Startup
+  is wrapped in a try/except that logs to `biblesearch.log` next to the
+  executable and shows a native error dialog on fatal failure, since
+  `console=False` means there's no terminal for errors to print to.
+- `static/index.html`: every `localStorage` call now goes through small
+  `lsGet`/`lsSet`/`lsRemove` wrapper functions (see near the top of the
+  script) instead of calling `localStorage` directly. This mattered in
+  practice, not just in theory: pywebview's Linux (GTK/WebKit2GTK) window
+  doesn't expose `localStorage` as a global at all, and the app used to
+  call it directly and unprotected at the very top of page load (theme/
+  font preference restoration) — that threw immediately and silently
+  prevented the rest of the page's startup code from running at all. The
+  wrappers degrade to "preferences just don't persist" instead.
+- `biblesearch.spec`: `console=False` (no terminal window), plus
+  platform-specific hidden-imports pywebview's backend needs on each OS
+  (GTK/WebKit2 on Linux, pythonnet/WebView2 on Windows, PyObjC/Cocoa on
+  Mac) — see the comments in the spec file itself.
+- `.github/workflows/build.yml`: the Linux runner now installs
+  WebKit2GTK's build/runtime GObject-introspection packages before
+  `pip install`, since PyGObject (pywebview's Linux backend dependency)
+  needs the dev headers present to build, and the actual `.typelib`
+  bindings to run.
 
 ## Known limits worth knowing about
 
@@ -90,3 +118,9 @@ documented here instead.
   compare.
 - No auto-update mechanism. New corpus or code = new tag = new release;
   users re-download manually.
+- The Windows and macOS builds are validated by their own CI runs, not by
+  me directly (I can only build/run the Linux target myself) — their
+  native webview components ship with the OS already, so they're expected
+  to work, but if either build fails or misbehaves, the Actions log and
+  the platform-specific hidden-imports section in `biblesearch.spec` are
+  the first places to look.
