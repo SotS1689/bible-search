@@ -1014,6 +1014,24 @@ let currentBook = 40, currentChapter = 1;
 let currentLang = 'grk';
 let currentHitRefs = new Set();
 let currentHlTerms   = [];
+// ════════════════════════════════════════════════════════════
+//  SAFE STORAGE — some embedding contexts (e.g. certain native-app
+//  webviews) don't expose localStorage at all, where a raw call throws
+//  a ReferenceError rather than just returning null. Routing every
+//  access through these wrappers means a missing/blocked localStorage
+//  degrades to "preferences just don't persist" instead of an uncaught
+//  exception that can halt whatever script runs after it.
+// ════════════════════════════════════════════════════════════
+function lsGet(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (e) { /* storage unavailable -- ignore */ }
+}
+function lsRemove(key) {
+  try { localStorage.removeItem(key); } catch (e) { /* ignore */ }
+}
+
 let currentHlStrongs = [];
 let allBooks = [];
 let englishVisible = false;  // whether BSB English is shown
@@ -1059,34 +1077,34 @@ const BS_MAX_MAYBE_LATER        = 5;
 function _bsToday() { return new Date().toISOString().slice(0, 10); }
 
 function bsTrackUsage(countsAsSearch) {
-  if (localStorage.getItem('bs_supportDismissedForever') === '1') return;
-  if (localStorage.getItem('bs_supportActed') === '1') return;
+  if (lsGet('bs_supportDismissedForever') === '1') return;
+  if (lsGet('bs_supportActed') === '1') return;
 
-  let searchCount = parseInt(localStorage.getItem('bs_searchCount') || '0', 10);
+  let searchCount = parseInt(lsGet('bs_searchCount') || '0', 10);
   if (countsAsSearch) {
     searchCount += 1;
-    localStorage.setItem('bs_searchCount', String(searchCount));
+    lsSet('bs_searchCount', String(searchCount));
   }
 
   let days = [];
-  try { days = JSON.parse(localStorage.getItem('bs_daysUsed') || '[]'); } catch (e) { days = []; }
+  try { days = JSON.parse(lsGet('bs_daysUsed') || '[]'); } catch (e) { days = []; }
   const today = _bsToday();
   if (!days.includes(today)) {
     days.push(today);
-    localStorage.setItem('bs_daysUsed', JSON.stringify(days));
+    lsSet('bs_daysUsed', JSON.stringify(days));
   }
 
   bsMaybeShowSupportCallout(searchCount, days.length);
 }
 
 function bsMaybeShowSupportCallout(searchCount, daysUsed) {
-  if (localStorage.getItem('bs_supportDismissedForever') === '1') return;
-  if (localStorage.getItem('bs_supportActed') === '1') return;
+  if (lsGet('bs_supportDismissedForever') === '1') return;
+  if (lsGet('bs_supportActed') === '1') return;
 
-  const maybeLaterCount = parseInt(localStorage.getItem('bs_supportMaybeLaterCount') || '0', 10);
+  const maybeLaterCount = parseInt(lsGet('bs_supportMaybeLaterCount') || '0', 10);
   if (maybeLaterCount >= BS_MAX_MAYBE_LATER) return;   // stop auto-popping; button stays available
 
-  const lastShown = parseInt(localStorage.getItem('bs_supportLastShown') || '0', 10);
+  const lastShown = parseInt(lsGet('bs_supportLastShown') || '0', 10);
   const now = Date.now();
 
   if (lastShown === 0) {
@@ -1106,7 +1124,7 @@ function bsShowSupportCallout() {
   const el = document.getElementById('supportCallout');
   if (!el) return;
   el.classList.add('open');
-  localStorage.setItem('bs_supportLastShown', String(Date.now()));
+  lsSet('bs_supportLastShown', String(Date.now()));
 
   // Dismiss on outside click (doesn't count as "maybe later" -- just closes it).
   setTimeout(() => document.addEventListener('click', _bsOutsideClickHandler), 0);
@@ -1124,12 +1142,12 @@ function bsSupportDismiss(mode) {
   document.getElementById('supportCallout').classList.remove('open');
   document.removeEventListener('click', _bsOutsideClickHandler);
   if (mode === 'forever') {
-    localStorage.setItem('bs_supportDismissedForever', '1');
+    lsSet('bs_supportDismissedForever', '1');
   } else if (mode === 'later') {
-    const c = parseInt(localStorage.getItem('bs_supportMaybeLaterCount') || '0', 10) + 1;
-    localStorage.setItem('bs_supportMaybeLaterCount', String(c));
+    const c = parseInt(lsGet('bs_supportMaybeLaterCount') || '0', 10) + 1;
+    lsSet('bs_supportMaybeLaterCount', String(c));
   } else if (mode === 'acted') {
-    localStorage.setItem('bs_supportActed', '1');
+    lsSet('bs_supportActed', '1');
   }
 }
 
@@ -1409,7 +1427,7 @@ function makeResizer(handleId, panelId, mode) {
 
   // Restore a previously-saved width, if any.
   try {
-    const saved = parseInt(localStorage.getItem(storageKey), 10);
+    const saved = parseInt(lsGet(storageKey), 10);
     if (saved) panel.style.width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, saved)) + 'px';
   } catch (err) { /* localStorage unavailable -- fine, just use the CSS default */ }
 
@@ -1435,7 +1453,7 @@ function makeResizer(handleId, panelId, mode) {
       handle.classList.remove('dragging');
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      try { localStorage.setItem(storageKey, parseInt(panel.style.width, 10)); } catch (err) { /* ignore */ }
+      try { lsSet(storageKey, parseInt(panel.style.width, 10)); } catch (err) { /* ignore */ }
     }
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
@@ -1597,7 +1615,7 @@ async function doSearch() {
   if (lang === 'eng' && !englishVisible) {
     englishVisible = true;
     document.getElementById('englishTrack').classList.add('on');
-    localStorage.setItem('bw-english', '1');
+    lsSet('bw-english', '1');
   }
 
   let url = `/api/search?q=${encodeURIComponent(q)}&lang=${lang}`;
@@ -1682,7 +1700,7 @@ let readModeRenderedBook = null;   // which book is currently shown in read mode
 function toggleEnglish() {
   englishVisible = !englishVisible;
   document.getElementById('englishTrack').classList.toggle('on', englishVisible);
-  localStorage.setItem('bw-english', englishVisible ? '1' : '0');
+  lsSet('bw-english', englishVisible ? '1' : '0');
 
   if (englishVisible) {
     loadEnglishForChapter(currentBook, currentChapter);
@@ -1828,7 +1846,7 @@ function tryParseReference(raw) {
 async function toggleReadMode() {
   readModeOn = !readModeOn;
   document.getElementById('readTrack').classList.toggle('on', readModeOn);
-  localStorage.setItem('bw-readmode', readModeOn ? '1' : '0');
+  lsSet('bw-readmode', readModeOn ? '1' : '0');
   if (readModeOn) {
     await renderReadMode(currentBook);
   } else {
@@ -2138,7 +2156,7 @@ async function applyLimitCommand(limitStr) {
   limitBookTo    = data.book_to;
   limitBookLabel = data.label;
   showLimitBar();
-  localStorage.setItem('bw-limit', JSON.stringify({from: limitBookFrom, to: limitBookTo, label: limitBookLabel}));
+  lsSet('bw-limit', JSON.stringify({from: limitBookFrom, to: limitBookTo, label: limitBookLabel}));
   return true;
 }
 
@@ -2155,7 +2173,7 @@ function showLimitBar() {
 function clearLimit() {
   limitBookFrom = null; limitBookTo = null; limitBookLabel = '';
   showLimitBar();
-  localStorage.removeItem('bw-limit');
+  lsRemove('bw-limit');
   document.getElementById('statusSearch').textContent = 'Limit cleared';
 }
 
@@ -2188,20 +2206,20 @@ function setScheme(scheme) {
   applyScheme(scheme, isLight);
   const sel = document.getElementById('colourSchemeSelect');
   if (sel) sel.value = scheme;
-  localStorage.setItem('bw-scheme', scheme);
+  lsSet('bw-scheme', scheme);
 }
 
 function toggleTheme() {
   isLight = !isLight;
   applyScheme(currentScheme, isLight);
   document.getElementById('themeTrack').classList.toggle('on', isLight);
-  localStorage.setItem('bw-theme', isLight ? 'light' : 'dark');
+  lsSet('bw-theme', isLight ? 'light' : 'dark');
 }
 
 function setSidebarFont(px) {
   document.documentElement.style.setProperty('--sidebar-font-size', px + 'px');
   document.getElementById('sidebarFontVal').textContent = px + 'px';
-  localStorage.setItem('bw-sidebar-font', px);
+  lsSet('bw-sidebar-font', px);
 }
 
 function setBrowseFont(px) {
@@ -2212,24 +2230,24 @@ function setBrowseFont(px) {
   document.documentElement.style.setProperty('--browse-hebrew-font-size', hpx + 'px');
   document.documentElement.style.setProperty('--browse-english-font-size', epx + 'px');
   document.getElementById('browseFontVal').textContent = px + 'px';
-  localStorage.setItem('bw-browse-font', px);
+  lsSet('bw-browse-font', px);
 }
 
 function restorePrefs() {
   // Restore colour scheme + light/dark
-  currentScheme = localStorage.getItem('bw-scheme') || 'default';
-  isLight = localStorage.getItem('bw-theme') === 'light';
+  currentScheme = lsGet('bw-scheme') || 'default';
+  isLight = lsGet('bw-theme') === 'light';
   applyScheme(currentScheme, isLight);
   document.getElementById('themeTrack').classList.toggle('on', isLight);
   const cSel = document.getElementById('colourSchemeSelect');
   if (cSel) cSel.value = currentScheme;
 
-  const sf = localStorage.getItem('bw-sidebar-font');
+  const sf = lsGet('bw-sidebar-font');
   if (sf) { document.getElementById('sidebarFontRange').value = sf; setSidebarFont(sf); }
-  const bf = localStorage.getItem('bw-browse-font');
+  const bf = lsGet('bw-browse-font');
   if (bf) { document.getElementById('browseFontRange').value = bf; setBrowseFont(bf); }
 
-  const lim = localStorage.getItem('bw-limit');
+  const lim = lsGet('bw-limit');
   if (lim) {
     try {
       const d = JSON.parse(lim);
@@ -2238,11 +2256,11 @@ function restorePrefs() {
     } catch(e) {}
   }
 
-  if (localStorage.getItem('bw-english') === '1') {
+  if (lsGet('bw-english') === '1') {
     englishVisible = true;
     document.getElementById('englishTrack').classList.add('on');
   }
-  if (localStorage.getItem('bw-readmode') === '1') {
+  if (lsGet('bw-readmode') === '1') {
     readModeOn = true;
     document.getElementById('readTrack').classList.add('on');
   }
