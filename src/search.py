@@ -301,8 +301,8 @@ def search(cmdline, lang='grk', book_from=None, book_to=None):
     for ref in sorted(refs, key=lambda r: (book_sort_key(r[0]), r[1], r[2])):
         b, c, v = ref
         words = cur.execute(
-            "SELECT surface,edition FROM words WHERE book=? AND chapter=? AND verse=? ORDER BY edition,pos",
-            (b, c, v)).fetchall()
+            "SELECT surface,edition FROM words WHERE book=? AND chapter=? AND verse=? AND lang=? ORDER BY edition,pos",
+            (b, c, v, lang)).fetchall()
         by_edition, order = {}, []
         for w in words:
             ed = w['edition']
