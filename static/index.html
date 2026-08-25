@@ -1282,13 +1282,13 @@ async function loadChapter(book, chapter, scrollToV) {
     });
 
     // LXX line(s) -- sit between the original (Hebrew) and English lines,
-    // styled like the English interlinear line, shown/hidden together with it.
-    // One line per LXX edition. Word-spans (for hover/right-click) are
-    // populated by loadLxxWords below.
+    // styled like the English interlinear line. Always shown when data
+    // exists, independent of the English toggle. Word-spans (for
+    // hover/right-click) are populated by loadLxxWords below.
     if (hasLxx && lxxByVerse[v.verse]) {
       lxxByVerse[v.verse].forEach(te => {
         const lxxLine = document.createElement('div');
-        lxxLine.className = 'verse-lxx hidden';
+        lxxLine.className = 'verse-lxx';
         lxxLine.dataset.verse = v.verse;
         lxxLine.dataset.edition = te.edition || '';
         const label = document.createElement('span');
@@ -1321,10 +1321,10 @@ async function loadChapter(book, chapter, scrollToV) {
   loadChapterWords(book, chapter, verses);
   if (hasLxx) loadLxxWords(book, chapter, verses, lxxByVerse);
 
-  // Load English translation if toggle is on
+  // Load English translation if toggle is on (independent of LXX, which is
+  // always shown above when data exists)
   if (englishVisible) {
     loadEnglishForChapter(book, chapter);
-    document.querySelectorAll('.verse-lxx').forEach(el => el.classList.remove('hidden'));
   }
 }
 
@@ -1659,9 +1659,9 @@ async function doSearch() {
   data.results.forEach((r, i) => {
     const item  = document.createElement('div');
     item.className = 'result-item';
-    const isHeb = r.book <= 39;
+    const langClass = lang === 'heb' ? 'hebrew' : (lang === 'grk' ? 'greek' : '');
     item.innerHTML = `<div class="result-ref">${r.ref}</div>
-      <div class="result-text ${isHeb?'hebrew':'greek'}">${r.text.substring(0,100)}${r.text.length>100?'…':''}</div>`;
+      <div class="result-text ${langClass}">${r.text.substring(0,100)}${r.text.length>100?'…':''}</div>`;
     item.addEventListener('click', async () => {
       document.querySelectorAll('.result-item').forEach(el => el.classList.remove('active'));
       item.classList.add('active');
@@ -1704,10 +1704,8 @@ function toggleEnglish() {
 
   if (englishVisible) {
     loadEnglishForChapter(currentBook, currentChapter);
-    document.querySelectorAll('.verse-lxx').forEach(el => el.classList.remove('hidden'));
   } else {
     document.querySelectorAll('.verse-english').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.verse-lxx').forEach(el => el.classList.add('hidden'));
   }
 }
 
