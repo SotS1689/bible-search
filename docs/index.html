@@ -1498,9 +1498,9 @@ function setLexiconLocked(locked) {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Shift' && !_lexiconLocked && _hoveredSpan) {
-    setLexiconLocked(true);
-  }
+  if (e.key !== 'Shift') return;
+  document.getElementById('morphPopup').style.display = 'none';
+  if (!_lexiconLocked && _hoveredSpan) setLexiconLocked(true);
 });
 document.addEventListener('keyup', e => {
   if (e.key === 'Shift') setLexiconLocked(false);
@@ -1522,6 +1522,7 @@ function showMorph(e) {
   const parsed = parseMorphCode(span.dataset.code, isHeb ? 'heb' : 'grk');
   document.getElementById('mpParsed').innerHTML    =
     parsed.map(([k,v]) => `<b style="color:#8899aa">${k}:</b> ${v}`).join('<br>');
+  positionMorphPopup(popup, span);
   popup.style.display = 'block';
 
   updateLexiconSidebar(span);
@@ -1588,17 +1589,18 @@ function escapeHtml(s) {
 }
 
 function hideMorph() {
-  if (_lexiconLocked) return;
   _hoveredSpan = null;
   document.getElementById('morphPopup').style.display = 'none';
 }
 
-document.addEventListener('mousemove', e => {
-  const popup = document.getElementById('morphPopup');
-  if (popup.style.display !== 'block') return;
-  popup.style.left = Math.min(e.clientX + 14, window.innerWidth  - 230) + 'px';
-  popup.style.top  = Math.min(e.clientY + 14, window.innerHeight - 170) + 'px';
-});
+// Anchors the popup near the hovered word once, when it's shown — it no
+// longer tracks the mouse afterward, so it won't jitter around under the
+// cursor while reading it.
+function positionMorphPopup(popup, span) {
+  const rect = span.getBoundingClientRect();
+  popup.style.left = Math.max(8, Math.min(rect.left + 14, window.innerWidth  - 230)) + 'px';
+  popup.style.top  = Math.max(8, Math.min(rect.bottom + 14, window.innerHeight - 170)) + 'px';
+}
 
 // ════════════════════════════════════════════════════════════
 //  SEARCH
