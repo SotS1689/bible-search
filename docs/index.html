@@ -544,6 +544,7 @@
   <div id="lexiconPanel">
     <div id="lexiconHeader">
       <span>Lexicon</span>
+      <span id="lexiconLockIndicator" style="display:none; color: var(--accent2);">📌 held (release Shift to unlock)</span>
     </div>
     <div id="lexiconContent">
       <div class="lx-empty">Hover over a Greek or Hebrew word to see its lexicon entry.</div>
@@ -1483,8 +1484,34 @@ function makeResizer(handleId, panelId, mode) {
 let _morphHoverToken = 0;
 const _glossCache = {}; // "lang:key" -> gloss object or null, avoids re-fetching on repeat hovers
 
+// Holding Shift locks the lexicon sidebar (and morph popup) onto whichever
+// word was under the mouse at the moment Shift went down, so the mouse can
+// be moved into the sidebar to read/scroll it without the display jumping
+// to whatever word it crosses along the way.
+let _hoveredSpan   = null;
+let _lexiconLocked = false;
+
+function setLexiconLocked(locked) {
+  _lexiconLocked = locked;
+  const indicator = document.getElementById('lexiconLockIndicator');
+  if (indicator) indicator.style.display = locked ? 'inline' : 'none';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Shift' && !_lexiconLocked && _hoveredSpan) {
+    setLexiconLocked(true);
+  }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'Shift') setLexiconLocked(false);
+});
+// Guard against a stuck lock if Shift's keyup is missed (e.g. alt-tab while held).
+window.addEventListener('blur', () => setLexiconLocked(false));
+
 function showMorph(e) {
-  const span  = e.currentTarget;
+  const span = e.currentTarget;
+  _hoveredSpan = span;
+  if (_lexiconLocked) return;
   const popup = document.getElementById('morphPopup');
   const isHeb = span.dataset.lang === 'heb';
   document.getElementById('mpSurface').textContent = span.dataset.surface;
@@ -1561,6 +1588,8 @@ function escapeHtml(s) {
 }
 
 function hideMorph() {
+  if (_lexiconLocked) return;
+  _hoveredSpan = null;
   document.getElementById('morphPopup').style.display = 'none';
 }
 
