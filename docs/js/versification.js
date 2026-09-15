@@ -282,8 +282,24 @@
     return hebToEng(book, chapter, verse); // lang === 'heb'
   }
 
+  // General conversion between any two of 'eng' | 'heb' | 'grk', e.g. for
+  // interpreting a typed reference in whichever language a user has
+  // selected and converting it to whatever numbering the passage view
+  // will display. Hebrew is used as the pivot between English and Greek.
+  function convertRef(book, chapter, verse, fromLang, toLang) {
+    if (fromLang === toLang || book > 39) return { chapter, verse };
+    let heb;
+    if (fromLang === 'eng') heb = engToHeb(book, chapter, verse);
+    else if (fromLang === 'grk') heb = grkToHeb(book, chapter, verse);
+    else heb = { chapter, verse }; // fromLang === 'heb'
+    if (toLang === 'heb') return heb;
+    if (toLang === 'grk') return hebToGrk(book, heb.chapter, heb.verse);
+    if (toLang === 'eng') return hebToEng(book, heb.chapter, heb.verse);
+    return heb;
+  }
+
   global.Versification = {
     engToHeb, hebToEng, hebToGrk, grkToHeb, engToNative, nativeToEng,
-    psalmTitleOffset,
+    convertRef, psalmTitleOffset,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

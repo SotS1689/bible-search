@@ -178,12 +178,14 @@
   }
   .verse-lxx.hidden { display: none; }
   .lxx-label { font-style: normal; font-size: 0.85em; color: var(--accent); margin-right: 4px; }
-  /* Per-line version + reference tag (WTT/BGT/SBLGNT/BLB Book ch:v), shown
-     before each version's own text -- each version numbers verses using
-     its own tradition's chapter/verse (see js/versification.js), so every
-     line is labeled independently rather than sharing one heading. */
-  .line-ref { font-style: normal; font-size: 0.78em; color: var(--accent); margin-right: 6px; white-space: nowrap; }
-  .line-ref sup { font-weight: 400; opacity: 0.75; margin-right: 3px; }
+  /* Per-line reference tag (Book ch:v), shown before each version's own
+     text -- each version numbers verses using its own tradition's
+     chapter/verse (see js/versification.js), so every line is labeled
+     independently rather than sharing one heading. margin-inline-end
+     (not margin-right) so the gap lands on the correct side in RTL
+     Hebrew text too. */
+  .line-ref { font-style: normal; font-size: 0.78em; color: var(--accent); margin-inline-end: 12px; white-space: nowrap; }
+  .line-ref sup { font-weight: 400; opacity: 0.75; margin-inline-end: 3px; }
   .line-ref b { font-weight: 700; }
   .verse-ref { color: var(--accent); font-size: 14px; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
   .verse-text { font-size: var(--browse-font-size); line-height: 1.9; color: var(--text); }
@@ -1661,18 +1663,20 @@ async function doSearch() {
   }
 
   // Handle bare reference navigation: "John 3:16", "Josh 1:1", "Ps 23"
-  // References are always typed using English-tradition chapter/verse
-  // numbers; convert to whichever native numbering the passage view will
-  // actually display (Hebrew/Greek for OT books) before jumping, so e.g.
-  // "Joel 3:1" lands on the Hebrew/LXX text that is actually Joel 3:1 in
-  // English (which OSHB numbers as Joel 4:1). See js/versification.js.
+  // The typed chapter/verse is understood in whichever language is
+  // currently active in the search-language selector (Hebrew/Greek native
+  // numbering, or English), then converted to whatever native numbering
+  // the passage view will actually display, so e.g. "Joel 3:1" in English
+  // mode lands on the Hebrew/LXX text that is Joel 3:1 in English (OSHB
+  // Joel 4:1), while "Joel 3:1" in Hebrew mode lands on Hebrew Joel 3:1
+  // directly. See js/versification.js.
   const ref = tryParseReference(q);
   if (ref) {
     // Find book in allBooks and set selector
     const bookOpt = [...document.getElementById('bookSelect').options]
       .find(o => parseInt(o.value) === ref.book);
     if (bookOpt) {
-      const native = Versification.engToNative(ref.book, ref.chapter, ref.verse, nativeLangFor(ref.book));
+      const native = Versification.convertRef(ref.book, ref.chapter, ref.verse, lang, nativeLangFor(ref.book));
       document.getElementById('bookSelect').value = ref.book;
       await loadChapters(ref.book);
       // Pass verse so read mode can scroll after rendering
