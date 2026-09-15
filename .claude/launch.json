@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8123", "--directory", "docs"],
       "port": 8123
+    },
+    {
+      "name": "flask-app",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["app.py"],
+      "port": 7070
     }
   ]
 }
