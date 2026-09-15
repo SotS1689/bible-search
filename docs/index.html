@@ -178,6 +178,13 @@
   }
   .verse-lxx.hidden { display: none; }
   .lxx-label { font-style: normal; font-size: 0.85em; color: var(--accent); margin-right: 4px; }
+  /* Per-line version + reference tag (WTT/BGT/SBLGNT/BLB Book ch:v), shown
+     before each version's own text -- each version numbers verses using
+     its own tradition's chapter/verse (see js/versification.js), so every
+     line is labeled independently rather than sharing one heading. */
+  .line-ref { font-style: normal; font-size: 0.78em; color: var(--accent); margin-right: 6px; white-space: nowrap; }
+  .line-ref sup { font-weight: 400; opacity: 0.75; margin-right: 3px; }
+  .line-ref b { font-weight: 700; }
   .verse-ref { color: var(--accent); font-size: 14px; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
   .verse-text { font-size: var(--browse-font-size); line-height: 1.9; color: var(--text); }
   .verse-text.hebrew { font-family: var(--hebrew-font); font-size: var(--browse-hebrew-font-size); direction: rtl; }
@@ -1245,21 +1252,28 @@ async function loadChapter(book, chapter, scrollToV) {
   const editionsOf = v => (v.texts && v.texts.length) ? v.texts
                           : (v.text ? [{edition: null, label: null, text: v.text}] : []);
 
-  // For OT books, also try to load the LXX (Greek) text of the same
-  // chapter, to be shown as secondary interlinear line(s), like English.
-  // Books with more than one Greek textual tradition (e.g. Judges A/B,
-  // Daniel OG/TH) yield more than one entry per verse here.
-  let lxxByVerse = {};
+  // For OT books, also load the LXX (Greek) text as a secondary
+  // interlinear line, like English. Greek uses its own native chapter
+  // numbering, which can differ from Hebrew's (e.g. Psalms -- see
+  // js/versification.js), so each verse gets its own mapped Greek
+  // reference, and we fetch whichever Greek chapter(s) those references
+  // actually fall in. Books with more than one Greek textual tradition
+  // (e.g. Judges A/B, Daniel OG/TH) yield more than one entry per verse.
+  let lxxByKey = {}; // `${grkChapter}:${grkVerse}` -> texts[]
   let hasLxx = false;
+  const grkRefOf = v => Versification.hebToGrk(book, chapter, v.verse);
   if (book <= 39) {
-    try {
-      const lxxRes  = await fetch(`/api/passage?book=${book}&chapter=${chapter}&lang=grk`);
-      const lxxData = await lxxRes.json();
-      lxxData.forEach(v => {
-        const texts = editionsOf(v).filter(t => t.text);
-        if (texts.length) { lxxByVerse[v.verse] = texts; hasLxx = true; }
-      });
-    } catch (e) { /* LXX not imported -- fine, just skip the line */ }
+    const neededGrkChapters = [...new Set(verses.map(v => grkRefOf(v).chapter))];
+    for (const gc of neededGrkChapters) {
+      try {
+        const lxxRes  = await fetch(`/api/passage?book=${book}&chapter=${gc}&lang=grk`);
+        const lxxData = await lxxRes.json();
+        lxxData.forEach(v => {
+          const texts = editionsOf(v).filter(t => t.text);
+          if (texts.length) { lxxByKey[`${gc}:${v.verse}`] = texts; hasLxx = true; }
+        });
+      } catch (e) { /* LXX not imported -- fine, just skip the line */ }
+    }
   }
 
   // Verse-jump dropdown
@@ -1271,18 +1285,27 @@ async function loadChapter(book, chapter, scrollToV) {
     vjSel.appendChild(opt);
   });
 
-  // Render placeholder verse blocks
+  // Render placeholder verse blocks. Each version's line carries its OWN
+  // book/chapter:verse reference -- Hebrew, Greek and English can each
+  // number the same underlying verse differently (e.g. Joel 3:1 English =
+  // Joel 4:1 Hebrew/LXX) -- rather than one shared heading, the way
+  // BibleWorks lays these out.
   const container = document.getElementById('verseContainer');
   container.innerHTML = '';
   const bookName = allBooks.find(b => b.num === book)?.name || book;
+  const PRIMARY_LABEL = lang === 'heb' ? 'WTT' : 'SBLGNT';
+
+  function makeRefSpan(label, refChapter, refVerse) {
+    const span = document.createElement('span');
+    span.className = 'line-ref';
+    span.innerHTML = `<sup>${label}</sup> <b>${bookName} ${refChapter}:${refVerse}</b>`;
+    return span;
+  }
+
   for (const v of verses) {
     const block = document.createElement('div');
     block.className = 'verse-block';
     block.id = `verse-${v.verse}`;
-    const refLine = document.createElement('div');
-    refLine.className = 'verse-ref';
-    refLine.textContent = `${bookName} ${chapter}:${v.verse}`;
-    block.appendChild(refLine);
 
     // Primary text -- one line per textual edition (usually just one).
     const textEditions = editionsOf(v);
@@ -1291,37 +1314,46 @@ async function loadChapter(book, chapter, scrollToV) {
       textLine.className = 'verse-text ' + (lang === 'heb' ? 'hebrew' : 'greek');
       textLine.dataset.verse = v.verse;
       textLine.dataset.edition = te.edition || '';
-      if (textEditions.length > 1) {
-        const label = document.createElement('span');
-        label.className = 'lxx-label';
-        label.textContent = (te.label || te.edition || '') + ': ';
-        textLine.appendChild(label);
-      }
+      const label = textEditions.length > 1 ? `${PRIMARY_LABEL} ${te.label || te.edition || ''}` : PRIMARY_LABEL;
+      textLine.appendChild(makeRefSpan(label, chapter, v.verse));
       block.appendChild(textLine);
     });
 
-    // LXX line(s) -- sit between the original (Hebrew) and English lines,
-    // styled like the English interlinear line. Always shown when data
-    // exists, independent of the English toggle. Word-spans (for
+    // LXX line(s) -- own Greek chapter:verse reference (may differ from
+    // the Hebrew verse this block is grouped under). Word-spans (for
     // hover/right-click) are populated by loadLxxWords below.
-    if (hasLxx && lxxByVerse[v.verse]) {
-      lxxByVerse[v.verse].forEach(te => {
+    const grkRef = grkRefOf(v);
+    const lxxTexts = lxxByKey[`${grkRef.chapter}:${grkRef.verse}`];
+    if (lxxTexts) {
+      lxxTexts.forEach(te => {
         const lxxLine = document.createElement('div');
         lxxLine.className = 'verse-lxx';
-        lxxLine.dataset.verse = v.verse;
+        lxxLine.dataset.verse = v.verse; // native (Hebrew) verse -- for block lookup
+        lxxLine.dataset.grkChapter = grkRef.chapter;
+        lxxLine.dataset.grkVerse   = grkRef.verse;
         lxxLine.dataset.edition = te.edition || '';
-        const label = document.createElement('span');
-        label.className = 'lxx-label';
-        label.textContent = 'LXX' + (te.label ? ` (${te.label})` : (te.edition ? ` ${te.edition}` : '')) + ':';
-        lxxLine.appendChild(label);
+        const label = 'BGT' + (te.label ? ` ${te.label}` : (te.edition ? ` ${te.edition}` : ''));
+        lxxLine.appendChild(makeRefSpan(label, grkRef.chapter, grkRef.verse));
         block.appendChild(lxxLine);
       });
     }
 
+    // English -- own English chapter:verse reference. The reference label
+    // renders immediately; the text itself streams in via
+    // loadEnglishForChapter once its translation chapter is fetched.
+    const engRef = Versification.nativeToEng(book, chapter, v.verse, lang);
     const engLine = document.createElement('div');
     engLine.className = 'verse-english hidden';
     engLine.dataset.verse = v.verse;
-    engLine.textContent = '';
+    if (engRef.isTitle) {
+      // Hebrew title verse (e.g. a Psalm superscription) has no English
+      // verse of its own -- leave unlabeled; loadEnglishForChapter skips it.
+      engLine.dataset.isTitle = '1';
+    } else {
+      engLine.dataset.engChapter = engRef.chapter;
+      engLine.dataset.engVerse   = engRef.verse;
+      engLine.appendChild(makeRefSpan('BLB', engRef.chapter, engRef.verse));
+    }
     block.appendChild(engLine);
 
     container.appendChild(block);
@@ -1338,7 +1370,7 @@ async function loadChapter(book, chapter, scrollToV) {
 
   // Load word-level data asynchronously (enables morph popups + word highlighting)
   loadChapterWords(book, chapter, verses);
-  if (hasLxx) loadLxxWords(book, chapter, verses, lxxByVerse);
+  if (hasLxx) loadLxxWords(book, verses);
 
   // Load English translation if toggle is on (independent of LXX, which is
   // always shown above when data exists)
@@ -1348,10 +1380,10 @@ async function loadChapter(book, chapter, scrollToV) {
 }
 
 // Builds tagged word-spans (for hover/right-click/highlighting) into `line`,
-// clearing it first except for any leading label span (edition/"LXX:" tag).
+// clearing it first except for any leading reference-label span.
 function _fillWordLine(line, words) {
-  // Preserve a leading .lxx-label element (edition tag), if present.
-  const label = line.querySelector(':scope > .lxx-label');
+  // Preserve a leading .line-ref element (version + reference tag), if present.
+  const label = line.querySelector(':scope > .line-ref');
   line.innerHTML = '';
   if (label) line.appendChild(label);
 
@@ -1396,16 +1428,17 @@ async function loadChapterWords(book, chapter, verses) {
   }
 }
 
-async function loadLxxWords(book, chapter, verses, lxxByVerse) {
+async function loadLxxWords(book, verses) {
   const container = document.getElementById('verseContainer');
 
   for (const v of verses) {
-    if (!lxxByVerse[v.verse]) continue;
     const lxxLines = container.querySelectorAll(`#verse-${v.verse} .verse-lxx`);
     for (const lxxLine of lxxLines) {
+      const gc = lxxLine.dataset.grkChapter;
+      const gv = lxxLine.dataset.grkVerse;
       const ed = lxxLine.dataset.edition || '';
       const edParam = ed ? `&edition=${encodeURIComponent(ed)}` : '';
-      const res   = await fetch(`/api/verse?book=${book}&chapter=${chapter}&verse=${v.verse}&lang=grk${edParam}`);
+      const res   = await fetch(`/api/verse?book=${book}&chapter=${gc}&verse=${gv}&lang=grk${edParam}`);
       const words = await res.json();
       _fillWordLine(lxxLine, words);
     }
@@ -1766,14 +1799,15 @@ function toggleEnglish() {
 
 async function loadEnglishForChapter(book, chapter) {
   if (!englishVisible) return;
-  // `chapter` is the native (Hebrew/Greek) chapter number the passage view
-  // is showing; map each displayed verse to its English chapter/verse
-  // before looking up the translation, since these can differ (Joel,
-  // Malachi, Psalm titles, etc. -- see js/versification.js).
-  const nativeLang = nativeLangFor(book);
-  const refs = [...document.querySelectorAll('.verse-english')].map(el => ({
-    el, eng: Versification.nativeToEng(book, chapter, parseInt(el.dataset.verse), nativeLang),
-  }));
+  // Each .verse-english line already carries its own mapped English
+  // chapter/verse in its dataset (set when the block was built -- see
+  // loadChapter), since that can differ from the native Hebrew/Greek
+  // verse it's grouped under (Joel, Malachi, Psalm titles, etc. --
+  // see js/versification.js). Lines for a Hebrew title verse (no English
+  // counterpart) are marked isTitle and skipped.
+  const refs = [...document.querySelectorAll('.verse-english')]
+    .filter(el => !el.dataset.isTitle)
+    .map(el => ({ el, eng: { chapter: parseInt(el.dataset.engChapter), verse: parseInt(el.dataset.engVerse) } }));
   const neededChapters = [...new Set(refs.map(r => r.eng.chapter))];
   for (const ec of neededChapters) {
     const key = `eng-${book}-${ec}`;
@@ -1784,14 +1818,19 @@ async function loadEnglishForChapter(book, chapter) {
   }
   const lang = document.getElementById('langSelect').value;
   refs.forEach(({ el, eng }) => {
-    if (eng.isTitle) return; // Hebrew title verse has no English counterpart
     const data = englishCache[`eng-${book}-${eng.chapter}`] || {};
     const text = data[eng.verse] || data[String(eng.verse)];
     if (text) {
+      let textSpan = el.querySelector(':scope > .eng-text');
+      if (!textSpan) {
+        textSpan = document.createElement('span');
+        textSpan.className = 'eng-text';
+        el.appendChild(textSpan);
+      }
       if (lang === 'eng' && currentHlTerms.length) {
-        el.innerHTML = highlightEnglishText(text, currentHlTerms);
+        textSpan.innerHTML = highlightEnglishText(text, currentHlTerms);
       } else {
-        el.textContent = text;
+        textSpan.textContent = text;
       }
       el.classList.remove('hidden');
     }
