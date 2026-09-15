@@ -39,9 +39,10 @@
     const bar = document.getElementById('bwLoadBar');
     const pct = document.getElementById('bwLoadPct');
     if (total > 0) {
-      const p = Math.min(100, Math.round((loaded / total) * 100));
+      const shown = Math.min(loaded, total);
+      const p = Math.min(100, Math.round((shown / total) * 100));
       if (bar) bar.style.width = p + '%';
-      if (pct) pct.textContent = `${p}%  (${(loaded / 1e6).toFixed(1)} / ${(total / 1e6).toFixed(1)} MB)`;
+      if (pct) pct.textContent = `${p}%  (${(shown / 1e6).toFixed(1)} / ${(total / 1e6).toFixed(1)} MB)`;
     } else if (pct) {
       pct.textContent = `${(loaded / 1e6).toFixed(1)} MB…`;
     }
