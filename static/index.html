@@ -1520,7 +1520,7 @@ function updateLexiconSidebar(span) {
     content.innerHTML +=
       translitRow +
       `<div class="lx-gloss">${escapeHtml(g.gloss || '')}</div>` +
-      `<div class="lx-meaning">${escapeHtml(g.meaning || '')}</div>`;
+      `<div class="lx-meaning">${g.meaning || ''}</div>`;
   });
 }
 
