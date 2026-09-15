@@ -718,6 +718,7 @@
 <script src="js/search.js"></script>
 <script src="js/api.js"></script>
 <script src="js/fetch-shim.js"></script>
+<script src="js/versification.js"></script>
 
 <script>
 // ════════════════════════════════════════════════════════════
@@ -1627,17 +1628,23 @@ async function doSearch() {
   }
 
   // Handle bare reference navigation: "John 3:16", "Josh 1:1", "Ps 23"
+  // References are always typed using English-tradition chapter/verse
+  // numbers; convert to whichever native numbering the passage view will
+  // actually display (Hebrew/Greek for OT books) before jumping, so e.g.
+  // "Joel 3:1" lands on the Hebrew/LXX text that is actually Joel 3:1 in
+  // English (which OSHB numbers as Joel 4:1). See js/versification.js.
   const ref = tryParseReference(q);
   if (ref) {
     // Find book in allBooks and set selector
     const bookOpt = [...document.getElementById('bookSelect').options]
       .find(o => parseInt(o.value) === ref.book);
     if (bookOpt) {
+      const native = Versification.engToNative(ref.book, ref.chapter, ref.verse, nativeLangFor(ref.book));
       document.getElementById('bookSelect').value = ref.book;
       await loadChapters(ref.book);
       // Pass verse so read mode can scroll after rendering
-      await loadChapter(ref.book, ref.chapter, ref.verse);
-      if (!readModeOn) setTimeout(() => scrollToVerse(ref.verse), 350);
+      await loadChapter(ref.book, native.chapter, native.verse);
+      if (!readModeOn) setTimeout(() => scrollToVerse(native.verse), 350);
       document.getElementById('statusSearch').textContent =
         `Navigated to ${bookOpt.text} ${ref.chapter}:${ref.verse}`;
     }
@@ -1759,16 +1766,27 @@ function toggleEnglish() {
 
 async function loadEnglishForChapter(book, chapter) {
   if (!englishVisible) return;
-  const key = `${book}-${chapter}`;
-  if (!englishCache[key]) {
-    const res  = await fetch(`/api/translation?book=${book}&chapter=${chapter}&version=BLB`);
-    englishCache[key] = await res.json();
+  // `chapter` is the native (Hebrew/Greek) chapter number the passage view
+  // is showing; map each displayed verse to its English chapter/verse
+  // before looking up the translation, since these can differ (Joel,
+  // Malachi, Psalm titles, etc. -- see js/versification.js).
+  const nativeLang = nativeLangFor(book);
+  const refs = [...document.querySelectorAll('.verse-english')].map(el => ({
+    el, eng: Versification.nativeToEng(book, chapter, parseInt(el.dataset.verse), nativeLang),
+  }));
+  const neededChapters = [...new Set(refs.map(r => r.eng.chapter))];
+  for (const ec of neededChapters) {
+    const key = `eng-${book}-${ec}`;
+    if (!englishCache[key]) {
+      const res = await fetch(`/api/translation?book=${book}&chapter=${ec}&version=BLB`);
+      englishCache[key] = await res.json();
+    }
   }
-  const data = englishCache[key];
   const lang = document.getElementById('langSelect').value;
-  document.querySelectorAll('.verse-english').forEach(el => {
-    const verse = el.dataset.verse;
-    const text  = data[verse] || data[parseInt(verse)];
+  refs.forEach(({ el, eng }) => {
+    if (eng.isTitle) return; // Hebrew title verse has no English counterpart
+    const data = englishCache[`eng-${book}-${eng.chapter}`] || {};
+    const text = data[eng.verse] || data[String(eng.verse)];
     if (text) {
       if (lang === 'eng' && currentHlTerms.length) {
         el.innerHTML = highlightEnglishText(text, currentHlTerms);
@@ -1861,6 +1879,18 @@ const REF_BOOKS = [
   ['1 pe',60],['2 pe',61],
   ['1 jo',62],['2 jo',63],['3 jo',64],
 ].sort((a,b) => b[0].length - a[0].length);  // longest first to avoid prefix ambiguity
+
+// Which native versification (heb/grk) the passage view actually renders
+// for a given book, right now. Normal (non-read) mode always shows the
+// Hebrew text as primary for OT books (Greek is only ever a secondary LXX
+// line there); read mode honors the language selector per renderReadMode.
+function nativeLangFor(book) {
+  if (book > 39) return 'grk';
+  if (readModeOn) {
+    return document.getElementById('langSelect').value === 'grk' ? 'grk' : 'heb';
+  }
+  return 'heb';
+}
 
 function tryParseReference(raw) {
   // Accept: "John 3:16", "John 3 16", "Josh 1:1", "1 Cor 3:2", "Ps 23"
@@ -1973,10 +2003,18 @@ async function renderReadMode(book) {
     }
 
     if (showEnglish) {
-      // Fetch English text for this chapter
-      if (!englishCache[cacheKey]) {
-        const er = await fetch(`/api/translation?book=${book}&chapter=${ch}&version=BLB`);
-        englishCache[cacheKey] = await er.json();
+      // Map each native (chapter,verse) to its English chapter/verse
+      // before looking up the translation, since these can differ (Joel,
+      // Malachi, Psalm titles, etc. -- see js/versification.js), then
+      // fetch whichever English chapter(s) actually cover this chapter.
+      const engRefs = verseData.map(v => ({ v, eng: Versification.nativeToEng(book, ch, v.verse, lang) }));
+      const neededChapters = [...new Set(engRefs.map(r => r.eng.chapter))];
+      for (const ec of neededChapters) {
+        const ekey = `eng-${book}-${ec}`;
+        if (!englishCache[ekey]) {
+          const er = await fetch(`/api/translation?book=${book}&chapter=${ec}&version=BLB`);
+          englishCache[ekey] = await er.json();
+        }
       }
 
       // Build English paragraph
@@ -1984,14 +2022,14 @@ async function renderReadMode(book) {
       para.className = 'read-para';
       para.dataset.book    = book;
       para.dataset.chapter = ch;
-      for (const v of verseData) {
+      for (const { v, eng } of engRefs) {
         const numSpan = document.createElement('span');
         numSpan.className    = 'read-versenum';
         numSpan.textContent  = v.verse;
         numSpan.id           = `read-v-${ch}-${v.verse}`;
         para.appendChild(numSpan);
-        const engData = englishCache[cacheKey] || {};
-        const engText = engData[v.verse] || engData[String(v.verse)] || '';
+        const engData = eng.isTitle ? {} : (englishCache[`eng-${book}-${eng.chapter}`] || {});
+        const engText = engData[eng.verse] || engData[String(eng.verse)] || '';
         const tspan   = document.createElement('span');
         tspan.textContent = engText + ' ';
         tspan.dataset.verse = v.verse;
