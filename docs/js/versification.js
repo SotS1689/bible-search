@@ -157,18 +157,25 @@
     ],
   };
 
-  // Psalms with a Hebrew title counted as verse 1 (shifting every body
-  // verse after it by this many). Everything not listed (incl. 1, 2, 10,
-  // 33, 43, 71, 91, 93-97, 99, 104-107, 109, 110, 111-138, 146-150) has no
-  // shift: Eng verse == Heb verse for that psalm.
+  // Psalms where the Hebrew title is its own separately-numbered verse 1
+  // (shifting every body verse after it by this many), rather than being
+  // folded into verse 1 together with the start of the actual content the
+  // way English translations render it. This is NOT the same question as
+  // "does this psalm have a title" -- e.g. Psalm 16's Hebrew verse 1 is
+  // "מִכְתָּם לְדָוִד שָׁמְרֵנִי אֵל..." ("A Miktam of David. Preserve me,
+  // O God...") in ONE verse, matching English exactly, with no separate
+  // title verse at all. Verified empirically against this app's own OSHB
+  // (Hebrew) and BLB (English) verse counts per psalm -- a psalm belongs
+  // here only where Hebrew genuinely has one more verse than English.
   const PSALM_TITLE_OFFSET_1 = new Set([
-    3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
-    30,31,32,34,35,36,37,38,39,40,41,42,44,45,46,47,48,49,50,51,52,53,54,
-    55,56,57,58,59,61,62,63,64,65,66,67,68,69,70,72,73,74,76,77,78,79,80,
-    81,82,83,84,85,86,87,88,89,90,92,98,100,101,102,103,108,139,140,141,
-    142,143,144,145,
+    3,4,5,6,7,8,9,12,18,19,20,21,22,30,31,34,36,38,39,40,41,42,44,45,46,47,
+    48,49,53,55,56,57,58,59,61,62,63,64,65,67,68,69,70,75,76,77,80,81,83,
+    84,85,88,89,92,102,108,140,142,
   ]);
-  const PSALM_TITLE_OFFSET_2 = new Set([60]); // unusually long title (attribution + occasion)
+  // Unusually long titles (attribution + occasion) that occupy 2 Hebrew
+  // verses, shifting the body by 2 instead of 1 -- also verified against
+  // actual Hebrew/English verse counts.
+  const PSALM_TITLE_OFFSET_2 = new Set([51,52,54,60]);
 
   function psalmTitleOffset(psalmNum) {
     if (PSALM_TITLE_OFFSET_2.has(psalmNum)) return 2;

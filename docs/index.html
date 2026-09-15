@@ -728,6 +728,7 @@
 <script src="js/api.js"></script>
 <script src="js/fetch-shim.js"></script>
 <script src="js/versification.js"></script>
+<script src="js/psalm-titles.js"></script>
 
 <script>
 // ════════════════════════════════════════════════════════════
@@ -1342,14 +1343,24 @@ async function loadChapter(book, chapter, scrollToV) {
 
     // English -- own English chapter:verse reference. The reference label
     // renders immediately; the text itself streams in via
-    // loadEnglishForChapter once its translation chapter is fetched.
+    // loadEnglishForChapter once its translation chapter is fetched --
+    // except for a Psalm title verse covered by PsalmTitleParts, whose
+    // fragment of the (combined) English verse 1 is already known and can
+    // be shown immediately, no fetch needed. See js/psalm-titles.js.
     const engRef = Versification.nativeToEng(book, chapter, v.verse, lang);
+    const titleParts = book === 19 ? PsalmTitleParts[chapter] : null;
     const engLine = document.createElement('div');
     engLine.className = 'verse-english hidden';
     engLine.dataset.verse = v.verse;
-    if (engRef.isTitle) {
-      // Hebrew title verse (e.g. a Psalm superscription) has no English
-      // verse of its own -- leave unlabeled; loadEnglishForChapter skips it.
+    if (titleParts && v.verse <= titleParts.length) {
+      engLine.dataset.engChapter = chapter;
+      engLine.dataset.engVerse   = 1;
+      engLine.dataset.splitText  = titleParts[v.verse - 1];
+      engLine.appendChild(makeRefSpan('', chapter, 1));
+    } else if (engRef.isTitle) {
+      // Hebrew title verse with no split data available -- leave
+      // unlabeled; loadEnglishForChapter skips it. (Shouldn't occur for
+      // any psalm in PSALM_TITLE_OFFSET_1/2, all covered by PsalmTitleParts.)
       engLine.dataset.isTitle = '1';
     } else {
       engLine.dataset.engChapter = engRef.chapter;
@@ -1807,12 +1818,35 @@ async function loadEnglishForChapter(book, chapter) {
   // chapter/verse in its dataset (set when the block was built -- see
   // loadChapter), since that can differ from the native Hebrew/Greek
   // verse it's grouped under (Joel, Malachi, Psalm titles, etc. --
-  // see js/versification.js). Lines for a Hebrew title verse (no English
-  // counterpart) are marked isTitle and skipped.
-  const refs = [...document.querySelectorAll('.verse-english')]
-    .filter(el => !el.dataset.isTitle)
+  // see js/versification.js). Lines for a Hebrew title verse with no
+  // English counterpart at all are marked isTitle and skipped; lines
+  // covered by PsalmTitleParts already carry their own text fragment in
+  // dataset.splitText and need no fetch (see loadChapter/js/psalm-titles.js).
+  const lang = document.getElementById('langSelect').value;
+  const showText = (el, text) => {
+    let textSpan = el.querySelector(':scope > .eng-text');
+    if (!textSpan) {
+      textSpan = document.createElement('span');
+      textSpan.className = 'eng-text';
+      el.appendChild(textSpan);
+    }
+    if (lang === 'eng' && currentHlTerms.length) {
+      textSpan.innerHTML = highlightEnglishText(text, currentHlTerms);
+    } else {
+      textSpan.textContent = text;
+    }
+    el.classList.remove('hidden');
+  };
+
+  const allEls = [...document.querySelectorAll('.verse-english')].filter(el => !el.dataset.isTitle);
+  const splitEls = allEls.filter(el => el.dataset.splitText !== undefined);
+  const fetchRefs = allEls
+    .filter(el => el.dataset.splitText === undefined)
     .map(el => ({ el, eng: { chapter: parseInt(el.dataset.engChapter), verse: parseInt(el.dataset.engVerse) } }));
-  const neededChapters = [...new Set(refs.map(r => r.eng.chapter))];
+
+  splitEls.forEach(el => showText(el, el.dataset.splitText));
+
+  const neededChapters = [...new Set(fetchRefs.map(r => r.eng.chapter))];
   for (const ec of neededChapters) {
     const key = `eng-${book}-${ec}`;
     if (!englishCache[key]) {
@@ -1820,24 +1854,10 @@ async function loadEnglishForChapter(book, chapter) {
       englishCache[key] = await res.json();
     }
   }
-  const lang = document.getElementById('langSelect').value;
-  refs.forEach(({ el, eng }) => {
+  fetchRefs.forEach(({ el, eng }) => {
     const data = englishCache[`eng-${book}-${eng.chapter}`] || {};
     const text = data[eng.verse] || data[String(eng.verse)];
-    if (text) {
-      let textSpan = el.querySelector(':scope > .eng-text');
-      if (!textSpan) {
-        textSpan = document.createElement('span');
-        textSpan.className = 'eng-text';
-        el.appendChild(textSpan);
-      }
-      if (lang === 'eng' && currentHlTerms.length) {
-        textSpan.innerHTML = highlightEnglishText(text, currentHlTerms);
-      } else {
-        textSpan.textContent = text;
-      }
-      el.classList.remove('hidden');
-    }
+    if (text) showText(el, text);
   });
 }
 
@@ -2065,14 +2085,20 @@ async function renderReadMode(book) {
       para.className = 'read-para';
       para.dataset.book    = book;
       para.dataset.chapter = ch;
+      const titleParts = book === 19 ? PsalmTitleParts[ch] : null;
       for (const { v, eng } of engRefs) {
         const numSpan = document.createElement('span');
         numSpan.className    = 'read-versenum';
         numSpan.textContent  = v.verse;
         numSpan.id           = `read-v-${ch}-${v.verse}`;
         para.appendChild(numSpan);
-        const engData = eng.isTitle ? {} : (englishCache[`eng-${book}-${eng.chapter}`] || {});
-        const engText = engData[eng.verse] || engData[String(eng.verse)] || '';
+        let engText;
+        if (titleParts && v.verse <= titleParts.length) {
+          engText = titleParts[v.verse - 1]; // split Psalm-title fragment -- see js/psalm-titles.js
+        } else {
+          const engData = eng.isTitle ? {} : (englishCache[`eng-${book}-${eng.chapter}`] || {});
+          engText = engData[eng.verse] || engData[String(eng.verse)] || '';
+        }
         const tspan   = document.createElement('span');
         tspan.textContent = engText + ' ';
         tspan.dataset.verse = v.verse;
