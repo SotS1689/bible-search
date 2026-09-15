@@ -1293,12 +1293,13 @@ async function loadChapter(book, chapter, scrollToV) {
   const container = document.getElementById('verseContainer');
   container.innerHTML = '';
   const bookName = allBooks.find(b => b.num === book)?.name || book;
-  const PRIMARY_LABEL = lang === 'heb' ? 'WTT' : 'SBLGNT';
 
-  function makeRefSpan(label, refChapter, refVerse) {
+  // `edition` distinguishes textual traditions (e.g. Judges A/B, Daniel
+  // OG/TH) when a verse has more than one; omit it for the ordinary case.
+  function makeRefSpan(edition, refChapter, refVerse) {
     const span = document.createElement('span');
     span.className = 'line-ref';
-    span.innerHTML = `<sup>${label}</sup> <b>${bookName} ${refChapter}:${refVerse}</b>`;
+    span.innerHTML = (edition ? `<sup>${edition}</sup> ` : '') + `<b>${bookName} ${refChapter}:${refVerse}</b>`;
     return span;
   }
 
@@ -1314,8 +1315,8 @@ async function loadChapter(book, chapter, scrollToV) {
       textLine.className = 'verse-text ' + (lang === 'heb' ? 'hebrew' : 'greek');
       textLine.dataset.verse = v.verse;
       textLine.dataset.edition = te.edition || '';
-      const label = textEditions.length > 1 ? `${PRIMARY_LABEL} ${te.label || te.edition || ''}` : PRIMARY_LABEL;
-      textLine.appendChild(makeRefSpan(label, chapter, v.verse));
+      const edition = textEditions.length > 1 ? (te.label || te.edition || '') : '';
+      textLine.appendChild(makeRefSpan(edition, chapter, v.verse));
       block.appendChild(textLine);
     });
 
@@ -1332,8 +1333,7 @@ async function loadChapter(book, chapter, scrollToV) {
         lxxLine.dataset.grkChapter = grkRef.chapter;
         lxxLine.dataset.grkVerse   = grkRef.verse;
         lxxLine.dataset.edition = te.edition || '';
-        const label = 'BGT' + (te.label ? ` ${te.label}` : (te.edition ? ` ${te.edition}` : ''));
-        lxxLine.appendChild(makeRefSpan(label, grkRef.chapter, grkRef.verse));
+        lxxLine.appendChild(makeRefSpan(te.label || te.edition || '', grkRef.chapter, grkRef.verse));
         block.appendChild(lxxLine);
       });
     }
@@ -1352,7 +1352,7 @@ async function loadChapter(book, chapter, scrollToV) {
     } else {
       engLine.dataset.engChapter = engRef.chapter;
       engLine.dataset.engVerse   = engRef.verse;
-      engLine.appendChild(makeRefSpan('BLB', engRef.chapter, engRef.verse));
+      engLine.appendChild(makeRefSpan('', engRef.chapter, engRef.verse));
     }
     block.appendChild(engLine);
 
