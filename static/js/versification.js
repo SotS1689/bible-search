@@ -318,33 +318,27 @@
     return null;
   }
 
-  // ---------- Hebrew <-> Greek, Proverbs. Hebrew chapters 1-24 and 30-31
-  // keep their ordinary numbering in Greek. Hebrew 25-29 ("these also are
-  // proverbs of Solomon, which the men of Hezekiah... copied out") is
-  // relocated as a block to the END of the Greek book, after chs 30
-  // (Agur) and 31 (Lemuel) -- Grk 32-36, same verse numbers, a clean +7
-  // chapter offset (verified against this app's own live CATSS Greek
-  // text: Grk 32:1-36:end match Heb 25:1-29:end verse-for-verse, and
-  // 25-29 have no Greek text at all under their own chapter numbers).
-  // Within the untouched 30-31 range there's one confirmed verse swap at
-  // 31:25/26. A few other spots BibleWorks 10's bgt.vmf versification map
-  // flags (Prov 1:10-11, 3:3-4, 11:10-11, 16:6-9, 22:8-9, 31:27-28)
-  // turned out on inspection to either match the Hebrew numbering exactly
-  // already or involve a genuine LXX doublet/plus-verse with no single
-  // clean Hebrew counterpart -- left unmapped like Jeremiah's own
-  // single-verse gaps, see file header.
+  // ---------- Hebrew <-> Greek, Proverbs. The corpus DB's own Greek chapter
+  // numbers for Proverbs now match Hebrew throughout (Heb/Grk 25-29, "these
+  // also are proverbs of Solomon, which the men of Hezekiah... copied
+  // out," was originally imported under CATSS's native Grk 32-36 -- see
+  // src/renumber_prov_grk.py -- and has been renumbered in the DB itself
+  // to 25-29 so no runtime remapping is needed for it). The one remaining
+  // difference is a confirmed verse swap at 31:25/26. A few other spots
+  // BibleWorks 10's bgt.vmf versification map flags (Prov 1:10-11, 3:3-4,
+  // 11:10-11, 16:6-9, 22:8-9, 31:27-28) turned out on inspection to
+  // either match the Hebrew numbering exactly already or involve a
+  // genuine LXX doublet/plus-verse with no single clean Hebrew
+  // counterpart -- left unmapped like Jeremiah's own single-verse gaps,
+  // see file header.
   function hebProvToGrk(chapter, verse) {
-    if (chapter >= 25 && chapter <= 29) return { chapter: chapter + 7, verse };
     if (chapter === 31 && verse === 25) return { chapter: 31, verse: 26 };
     if (chapter === 31 && verse === 26) return { chapter: 31, verse: 25 };
     return { chapter, verse };
   }
 
   function grkProvToHeb(chapter, verse) {
-    if (chapter >= 32 && chapter <= 36) return { chapter: chapter - 7, verse };
-    if (chapter === 31 && verse === 25) return { chapter: 31, verse: 26 };
-    if (chapter === 31 && verse === 26) return { chapter: 31, verse: 25 };
-    return { chapter, verse };
+    return hebProvToGrk(chapter, verse); // symmetric (a straight swap)
   }
 
   // ---------- Hebrew <-> Greek (Psalms — LXX merges Ps 9/10, splits
