@@ -1247,9 +1247,12 @@ async function loadChapter(book, chapter, scrollToV) {
   // (e.g. Judges A/B, Daniel OG/TH) yield more than one entry per verse.
   let lxxByKey = {}; // `${grkChapter}:${grkVerse}` -> texts[]
   let hasLxx = false;
+  // hebToGrk returns null for a Hebrew verse with no Greek (CATSS)
+  // counterpart (e.g. some Jeremiah 25-51 verses -- see
+  // static/js/versification.js) -- those verses simply get no LXX line.
   const grkRefOf = v => Versification.hebToGrk(book, chapter, v.verse);
   if (book <= 39) {
-    const neededGrkChapters = [...new Set(verses.map(v => grkRefOf(v).chapter))];
+    const neededGrkChapters = [...new Set(verses.map(v => grkRefOf(v)?.chapter).filter(c => c != null))];
     for (const gc of neededGrkChapters) {
       try {
         const lxxRes  = await fetch(`/api/passage?book=${book}&chapter=${gc}&lang=grk`);
@@ -1310,7 +1313,7 @@ async function loadChapter(book, chapter, scrollToV) {
     // the Hebrew verse this block is grouped under). Word-spans (for
     // hover/right-click) are populated by loadLxxWords below.
     const grkRef = grkRefOf(v);
-    const lxxTexts = lxxByKey[`${grkRef.chapter}:${grkRef.verse}`];
+    const lxxTexts = grkRef && lxxByKey[`${grkRef.chapter}:${grkRef.verse}`];
     if (lxxTexts) {
       lxxTexts.forEach(te => {
         const lxxLine = document.createElement('div');
@@ -1340,10 +1343,12 @@ async function loadChapter(book, chapter, scrollToV) {
       engLine.dataset.engVerse   = 1;
       engLine.dataset.splitText  = titleParts[v.verse - 1];
       engLine.appendChild(makeRefSpan('', chapter, 1));
-    } else if (engRef.isTitle) {
-      // Hebrew title verse with no split data available -- leave
-      // unlabeled; loadEnglishForChapter skips it. (Shouldn't occur for
-      // any psalm in PSALM_TITLE_OFFSET_1/2, all covered by PsalmTitleParts.)
+    } else if (engRef.isTitle || engRef.noEnglish) {
+      // Hebrew title verse with no split data available, or a Greek
+      // (Jeremiah 25-51) verse with no English/Hebrew counterpart at all
+      // -- leave unlabeled; loadEnglishForChapter skips it. (Titles
+      // shouldn't occur for any psalm in PSALM_TITLE_OFFSET_1/2, all
+      // covered by PsalmTitleParts.)
       engLine.dataset.isTitle = '1';
     } else {
       engLine.dataset.engChapter = engRef.chapter;
@@ -2024,7 +2029,7 @@ async function renderReadMode(book) {
       // Malachi, Psalm titles, etc. -- see static/js/versification.js),
       // then fetch whichever English chapter(s) actually cover this chapter.
       const engRefs = verseData.map(v => ({ v, eng: Versification.nativeToEng(book, ch, v.verse, lang) }));
-      const neededChapters = [...new Set(engRefs.map(r => r.eng.chapter))];
+      const neededChapters = [...new Set(engRefs.filter(r => !r.eng.noEnglish).map(r => r.eng.chapter))];
       for (const ec of neededChapters) {
         const ekey = `eng-${book}-${ec}`;
         if (!englishCache[ekey]) {
@@ -2049,7 +2054,7 @@ async function renderReadMode(book) {
         if (titleParts && v.verse <= titleParts.length) {
           engText = titleParts[v.verse - 1]; // split Psalm-title fragment -- see static/js/psalm-titles.js
         } else {
-          const engData = eng.isTitle ? {} : (englishCache[`eng-${book}-${eng.chapter}`] || {});
+          const engData = (eng.isTitle || eng.noEnglish) ? {} : (englishCache[`eng-${book}-${eng.chapter}`] || {});
           engText = engData[eng.verse] || engData[String(eng.verse)] || '';
         }
         const tspan   = document.createElement('span');

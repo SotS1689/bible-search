@@ -15,11 +15,26 @@
 //  Handbook of Style, 2nd ed. (SBL Press, 2014), pp. 265-268, via the
 //  table at https://matthewbarron.org/bible-versification-compared/.
 //
-//  Known, intentionally unmapped gap: Greek (LXX) Jeremiah 25-51 and
-//  Proverbs 15-31 reorder whole blocks of material relative to the
-//  Hebrew/English text (not a simple chapter/verse offset), so Greek
-//  in those ranges falls back to the Hebrew numbering here rather
-//  than being precisely remapped.
+//  Jeremiah 25-51: Greek (CATSS/Rahlfs LXX) reorders the oracles-against-
+//  the-nations block relative to the Hebrew/English text -- not a simple
+//  offset, but a permutation of whole chapters (and a few sub-chapter
+//  ranges) mapped explicitly below (JER_HEB_GRK_SEGMENTS). A handful of
+//  individual verses genuinely have no CATSS counterpart (e.g. Heb
+//  Jeremiah 27:1, 29:16-20) or split across a chapter boundary in a way
+//  too fine-grained to map 1:1 (e.g. Heb 25:13-14, 49:36b); for those,
+//  hebToGrk/grkToHeb return null rather than a wrong or coincidentally-
+//  colliding reference. Source: "Table Shewing the Order of Several
+//  Chapters and Verses in Jeremiah, as They Appear in the Hebrew and
+//  Septuagint Respectively," in L.C.L. Brenton, The Septuagint Version
+//  of the Old Testament (Bagster, 1851), via
+//  https://www.ccel.org/bible/brenton/Jeremiah/appendix.html (CATSS
+//  column).
+//
+//  Known, intentionally unmapped gap: Greek (LXX) Proverbs 15-31
+//  reorders whole blocks of material relative to the Hebrew/English
+//  text (not a simple chapter/verse offset), so Greek in that range
+//  falls back to the Hebrew numbering here rather than being precisely
+//  remapped.
 // ════════════════════════════════════════════════════════════
 
 (function (global) {
@@ -218,12 +233,95 @@
     return { chapter, verse };
   }
 
-  // ---------- Hebrew <-> Greek (Psalms only — LXX merges Ps 9/10, splits
+  // ---------- Hebrew <-> Greek, Jeremiah 25-51 (CATSS/Rahlfs reorders the
+  // oracles-against-the-nations block; see file header). Each segment maps
+  // a same-length Hebrew verse range to its Greek chapter/verse (verse
+  // numbers are usually unchanged, just moved to a different chapter --
+  // except the Jer 31/38 vv35-37 reorder and the Jer 49/30 three-way
+  // reorder below, which use gv0 to point at the shifted starting verse).
+  const JER_HEB_GRK_SEGMENTS = [
+    { hch: 25, hv0: 15, hv1: 38, gch: 32, gv0: 15 },
+    { hch: 26, hv0: 1,  hv1: 24, gch: 33, gv0: 1 },
+    { hch: 27, hv0: 2,  hv1: 6,  gch: 34, gv0: 2 },
+    { hch: 27, hv0: 8,  hv1: 12, gch: 34, gv0: 8 },
+    { hch: 27, hv0: 14, hv1: 16, gch: 34, gv0: 14 },
+    { hch: 27, hv0: 18, hv1: 20, gch: 34, gv0: 18 },
+    { hch: 27, hv0: 22, hv1: 22, gch: 34, gv0: 22 },
+    { hch: 28, hv0: 1,  hv1: 17, gch: 35, gv0: 1 },
+    { hch: 29, hv0: 1,  hv1: 15, gch: 36, gv0: 1 },
+    { hch: 29, hv0: 21, hv1: 32, gch: 36, gv0: 21 },
+    { hch: 30, hv0: 1,  hv1: 9,  gch: 37, gv0: 1 },
+    { hch: 30, hv0: 12, hv1: 14, gch: 37, gv0: 12 },
+    { hch: 30, hv0: 16, hv1: 21, gch: 37, gv0: 16 },
+    { hch: 30, hv0: 23, hv1: 24, gch: 37, gv0: 23 },
+    { hch: 31, hv0: 1,  hv1: 34, gch: 38, gv0: 1 },
+    { hch: 31, hv0: 35, hv1: 35, gch: 38, gv0: 36 }, // Heb 35,36,37 -> Grk 36,37,35
+    { hch: 31, hv0: 36, hv1: 36, gch: 38, gv0: 37 },
+    { hch: 31, hv0: 37, hv1: 37, gch: 38, gv0: 35 },
+    { hch: 31, hv0: 38, hv1: 40, gch: 38, gv0: 38 },
+    { hch: 32, hv0: 1,  hv1: 44, gch: 39, gv0: 1 },
+    { hch: 33, hv0: 1,  hv1: 13, gch: 40, gv0: 1 },
+    { hch: 34, hv0: 1,  hv1: 22, gch: 41, gv0: 1 },
+    { hch: 35, hv0: 1,  hv1: 19, gch: 42, gv0: 1 },
+    { hch: 36, hv0: 1,  hv1: 32, gch: 43, gv0: 1 },
+    { hch: 37, hv0: 1,  hv1: 21, gch: 44, gv0: 1 },
+    { hch: 38, hv0: 1,  hv1: 28, gch: 45, gv0: 1 },
+    { hch: 39, hv0: 1,  hv1: 3,  gch: 46, gv0: 1 },
+    { hch: 39, hv0: 14, hv1: 18, gch: 46, gv0: 14 },
+    { hch: 40, hv0: 1,  hv1: 16, gch: 47, gv0: 1 },
+    { hch: 41, hv0: 1,  hv1: 18, gch: 48, gv0: 1 },
+    { hch: 42, hv0: 1,  hv1: 22, gch: 49, gv0: 1 },
+    { hch: 43, hv0: 1,  hv1: 13, gch: 50, gv0: 1 },
+    { hch: 44, hv0: 1,  hv1: 30, gch: 51, gv0: 1 },
+    { hch: 45, hv0: 1,  hv1: 5,  gch: 51, gv0: 31 },
+    { hch: 46, hv0: 2,  hv1: 25, gch: 26, gv0: 2 },
+    { hch: 46, hv0: 27, hv1: 28, gch: 26, gv0: 27 },
+    { hch: 47, hv0: 1,  hv1: 7,  gch: 29, gv0: 1 },
+    { hch: 48, hv0: 1,  hv1: 44, gch: 31, gv0: 1 },
+    { hch: 49, hv0: 1,  hv1: 5,  gch: 30, gv0: 1 },
+    { hch: 49, hv0: 23, hv1: 27, gch: 30, gv0: 29 }, // Heb 23-27,28-33 -> Grk 29-33,23-28
+    { hch: 49, hv0: 28, hv1: 33, gch: 30, gv0: 23 },
+    { hch: 49, hv0: 34, hv1: 34, gch: 25, gv0: 20 },
+    { hch: 49, hv0: 35, hv1: 39, gch: 25, gv0: 15 },
+    { hch: 50, hv0: 1,  hv1: 46, gch: 27, gv0: 1 },
+    { hch: 51, hv0: 1,  hv1: 64, gch: 28, gv0: 1 },
+  ];
+
+  // Jer 1-24 (minus the ch8/9 boundary, handled by ENG_HEB_SEGMENTS), Jer
+  // 25:1-13, and Jer 52 are unaffected by the reorder and pass through
+  // unchanged; Jer 25:14-51:64 is the range CATSS actually permutes, so a
+  // verse in that range with no matching segment above genuinely has no
+  // CATSS counterpart -- see file header.
+  function hebJerToGrk(chapter, verse) {
+    if (chapter < 25 || chapter > 51) return { chapter, verse };
+    if (chapter === 25 && verse <= 13) return { chapter, verse };
+    for (const s of JER_HEB_GRK_SEGMENTS) {
+      if (chapter === s.hch && verse >= s.hv0 && verse <= s.hv1) {
+        return { chapter: s.gch, verse: s.gv0 + (verse - s.hv0) };
+      }
+    }
+    return null;
+  }
+
+  function grkJerToHeb(chapter, verse) {
+    if (chapter < 25 || chapter > 51) return { chapter, verse };
+    if (chapter === 25 && verse <= 13) return { chapter, verse };
+    for (const s of JER_HEB_GRK_SEGMENTS) {
+      const gv1 = s.gv0 + (s.hv1 - s.hv0);
+      if (chapter === s.gch && verse >= s.gv0 && verse <= gv1) {
+        return { chapter: s.hch, verse: s.hv0 + (verse - s.gv0) };
+      }
+    }
+    return null;
+  }
+
+  // ---------- Hebrew <-> Greek (Psalms — LXX merges Ps 9/10, splits
   // Ps 114-116, splits Ps 147, and runs one psalm-number lower than the
-  // Hebrew/English from Ps 11 through Ps 146. Every other OT book's LXX
-  // chapter/verse numbering matches the Hebrew as used here, except
-  // Jeremiah 25-51 and Proverbs 15-31, which reorder material outright
-  // and are not remapped — see file header.) ----------
+  // Hebrew/English from Ps 11 through Ps 146; Jeremiah 25-51 — see
+  // hebJerToGrk/grkJerToHeb above. Every other OT book's LXX chapter/verse
+  // numbering matches the Hebrew as used here, except Proverbs 15-31,
+  // which reorders material outright and is not remapped — see file
+  // header.) ----------
 
   function hebPsalmToGrk(chapter, verse) {
     if (chapter <= 8) return { chapter, verse };
@@ -261,11 +359,13 @@
 
   function hebToGrk(book, chapter, verse) {
     if (book === 19) return hebPsalmToGrk(chapter, verse);
+    if (book === 24) return hebJerToGrk(chapter, verse);
     return { chapter, verse };
   }
 
   function grkToHeb(book, chapter, verse) {
     if (book === 19) return grkPsalmToHeb(chapter, verse);
+    if (book === 24) return grkJerToHeb(chapter, verse);
     return { chapter, verse };
   }
 
@@ -273,10 +373,19 @@
   // display language's own text uses -- Hebrew for OT books, Greek/LXX
   // for OT books shown in Greek mode, straight passthrough for NT/eng) ----------
 
+  // hebToGrk/grkToHeb can return null for a Hebrew/Greek Jeremiah verse
+  // with no counterpart in the other language's numbering (see file
+  // header) -- these convenience wrappers surface that as a `noEnglish` /
+  // `noNative` flag rather than crash, so callers can skip rendering a
+  // translation line for that verse instead of guessing.
+
   function engToNative(book, chapter, verse, lang) {
     if (book > 39 || lang === 'eng') return { chapter, verse };
     const heb = engToHeb(book, chapter, verse);
-    if (lang === 'grk') return hebToGrk(book, heb.chapter, heb.verse);
+    if (lang === 'grk') {
+      const grk = hebToGrk(book, heb.chapter, heb.verse);
+      return grk || { chapter: heb.chapter, verse: heb.verse, noNative: true };
+    }
     return heb; // lang === 'heb'
   }
 
@@ -284,6 +393,7 @@
     if (book > 39 || lang === 'eng') return { chapter, verse };
     if (lang === 'grk') {
       const heb = grkToHeb(book, chapter, verse);
+      if (!heb) return { chapter, verse, noEnglish: true };
       return hebToEng(book, heb.chapter, heb.verse);
     }
     return hebToEng(book, chapter, verse); // lang === 'heb'
@@ -297,10 +407,10 @@
     if (fromLang === toLang || book > 39) return { chapter, verse };
     let heb;
     if (fromLang === 'eng') heb = engToHeb(book, chapter, verse);
-    else if (fromLang === 'grk') heb = grkToHeb(book, chapter, verse);
+    else if (fromLang === 'grk') heb = grkToHeb(book, chapter, verse) || { chapter, verse };
     else heb = { chapter, verse }; // fromLang === 'heb'
     if (toLang === 'heb') return heb;
-    if (toLang === 'grk') return hebToGrk(book, heb.chapter, heb.verse);
+    if (toLang === 'grk') return hebToGrk(book, heb.chapter, heb.verse) || heb;
     if (toLang === 'eng') return hebToEng(book, heb.chapter, heb.verse);
     return heb;
   }
