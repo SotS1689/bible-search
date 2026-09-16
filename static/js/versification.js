@@ -23,18 +23,20 @@
 //  Jeremiah 27:1, 29:16-20) or split across a chapter boundary in a way
 //  too fine-grained to map 1:1 (e.g. Heb 25:13-14, 49:36b); for those,
 //  hebToGrk/grkToHeb return null rather than a wrong or coincidentally-
-//  colliding reference. Source: "Table Shewing the Order of Several
-//  Chapters and Verses in Jeremiah, as They Appear in the Hebrew and
-//  Septuagint Respectively," in L.C.L. Brenton, The Septuagint Version
-//  of the Old Testament (Bagster, 1851), via
+//  colliding reference. Primary source: "Table Shewing the Order of
+//  Several Chapters and Verses in Jeremiah, as They Appear in the Hebrew
+//  and Septuagint Respectively," in L.C.L. Brenton, The Septuagint
+//  Version of the Old Testament (Bagster, 1851), via
 //  https://www.ccel.org/bible/brenton/Jeremiah/appendix.html (CATSS
-//  column).
+//  column); the Jer 49/Grk 30 oracle order was corrected against
+//  BibleWorks 10's bgt.vmf versification map and this app's own live
+//  Greek text, which both disagreed with Brenton there.
 //
-//  Known, intentionally unmapped gap: Greek (LXX) Proverbs 15-31
-//  reorders whole blocks of material relative to the Hebrew/English
-//  text (not a simple chapter/verse offset), so Greek in that range
-//  falls back to the Hebrew numbering here rather than being precisely
-//  remapped.
+//  Proverbs: despite published sources describing LXX Proverbs as
+//  reordering chapters 24-31 the way Jeremiah 25-51 is reordered, this
+//  app's own CATSS Greek text does NOT show that reorder -- see
+//  hebProvToGrk/grkProvToHeb below for what's actually there (one
+//  confirmed swap, everything else unchanged).
 // ════════════════════════════════════════════════════════════
 
 (function (global) {
@@ -278,9 +280,10 @@
     { hch: 46, hv0: 27, hv1: 28, gch: 26, gv0: 27 },
     { hch: 47, hv0: 1,  hv1: 7,  gch: 29, gv0: 1 },
     { hch: 48, hv0: 1,  hv1: 44, gch: 31, gv0: 1 },
-    { hch: 49, hv0: 1,  hv1: 5,  gch: 30, gv0: 1 },
-    { hch: 49, hv0: 23, hv1: 27, gch: 30, gv0: 29 }, // Heb 23-27,28-33 -> Grk 29-33,23-28
-    { hch: 49, hv0: 28, hv1: 33, gch: 30, gv0: 23 },
+    { hch: 49, hv0: 1,  hv1: 6,  gch: 30, gv0: 17 }, // Ammon
+    { hch: 49, hv0: 7,  hv1: 22, gch: 30, gv0: 1 },  // Edom
+    { hch: 49, hv0: 23, hv1: 27, gch: 30, gv0: 29 }, // Damascus
+    { hch: 49, hv0: 28, hv1: 33, gch: 30, gv0: 23 }, // Kedar/Hazor
     { hch: 49, hv0: 34, hv1: 34, gch: 25, gv0: 20 },
     { hch: 49, hv0: 35, hv1: 39, gch: 25, gv0: 15 },
     { hch: 50, hv0: 1,  hv1: 46, gch: 27, gv0: 1 },
@@ -315,13 +318,37 @@
     return null;
   }
 
+  // ---------- Hebrew <-> Greek, Proverbs. Published sources (e.g. the SBL
+  // table cited above) describe LXX Proverbs as reordering whole blocks of
+  // chapters 24-31 relative to the Hebrew/English text, the way it does
+  // Jeremiah 25-51. But checked verse-by-verse against this app's own
+  // CATSS Greek text, that block reorder does NOT show up here -- Greek
+  // Proverbs already carries the same chapter/verse numbers as Hebrew
+  // throughout (e.g. Grk 24:30-34 and Grk 30:1 are the ordinary "sluggard"
+  // and "words of Agur" passages in their usual places, not relocated).
+  // The one confirmed exception is a swap at 31:25/26 (content verified
+  // against the live text). A few other spots BibleWorks 10's bgt.vmf
+  // versification map flags (Prov 1:10-11, 3:3-4, 11:10-11, 16:6-9,
+  // 22:8-9, 31:27-28) turned out on inspection to either match the
+  // Hebrew numbering exactly already or involve a genuine LXX doublet/
+  // plus-verse with no single clean Hebrew counterpart -- left unmapped
+  // like Jeremiah's own single-verse gaps, see file header.
+  function hebProvToGrk(chapter, verse) {
+    if (chapter === 31 && verse === 25) return { chapter: 31, verse: 26 };
+    if (chapter === 31 && verse === 26) return { chapter: 31, verse: 25 };
+    return { chapter, verse };
+  }
+
+  function grkProvToHeb(chapter, verse) {
+    return hebProvToGrk(chapter, verse); // symmetric (a straight swap)
+  }
+
   // ---------- Hebrew <-> Greek (Psalms — LXX merges Ps 9/10, splits
   // Ps 114-116, splits Ps 147, and runs one psalm-number lower than the
   // Hebrew/English from Ps 11 through Ps 146; Jeremiah 25-51 — see
-  // hebJerToGrk/grkJerToHeb above. Every other OT book's LXX chapter/verse
-  // numbering matches the Hebrew as used here, except Proverbs 15-31,
-  // which reorders material outright and is not remapped — see file
-  // header.) ----------
+  // hebJerToGrk/grkJerToHeb above; Proverbs — see hebProvToGrk/
+  // grkProvToHeb above. Every other OT book's LXX chapter/verse numbering
+  // matches the Hebrew as used here.) ----------
 
   function hebPsalmToGrk(chapter, verse) {
     if (chapter <= 8) return { chapter, verse };
@@ -359,12 +386,14 @@
 
   function hebToGrk(book, chapter, verse) {
     if (book === 19) return hebPsalmToGrk(chapter, verse);
+    if (book === 20) return hebProvToGrk(chapter, verse);
     if (book === 24) return hebJerToGrk(chapter, verse);
     return { chapter, verse };
   }
 
   function grkToHeb(book, chapter, verse) {
     if (book === 19) return grkPsalmToHeb(chapter, verse);
+    if (book === 20) return grkProvToHeb(chapter, verse);
     if (book === 24) return grkJerToHeb(chapter, verse);
     return { chapter, verse };
   }
