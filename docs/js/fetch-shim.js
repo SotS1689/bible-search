@@ -19,7 +19,7 @@
     'font-family:Segoe UI,sans-serif', 'gap:14px',
   ].join(';');
   overlay.innerHTML =
-    '<div style="font-size:18px;font-weight:600;letter-spacing:1px;">BIBLEWORKS SEARCH</div>' +
+    '<div style="font-size:18px;font-weight:600;letter-spacing:1px;">BIBLESEARCH</div>' +
     '<div style="font-size:13px;color:#7a9abf;" id="bwLoadMsg">Loading corpus database…</div>' +
     '<div style="width:320px;max-width:80vw;height:8px;background:#1a3a6e;border-radius:4px;overflow:hidden;">' +
     '  <div id="bwLoadBar" style="width:0%;height:100%;background:#53d8fb;transition:width .15s;"></div>' +
