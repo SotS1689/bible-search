@@ -118,10 +118,15 @@
   #lexiconContent .lx-meaning { color: var(--text); margin-top: 6px; }
   #lexiconContent .lx-none { color: var(--muted); font-style: italic; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 
-  #browsePanel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #browsePanel { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 320px; }
   #browseNav {
     background: var(--surface2); padding: 6px 12px;
-    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center;
+    flex-wrap: wrap; gap: 8px; row-gap: 6px; flex-shrink: 0;
+  }
+  #browseNavSettings {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 10px; row-gap: 6px;
+    margin-left: auto;
   }
   #browseNav select { font-size: 12px; }
   #navRef { color: var(--accent2); font-size: 12px; font-weight: 600; margin-left: 4px; }
@@ -510,7 +515,7 @@
       <span id="navRef"></span>
       <button class="btn-secondary" onclick="navChapter(-1)">◀ Prev</button>
       <button class="btn-secondary" onclick="navChapter(1)">Next ▶</button>
-      <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+      <div id="browseNavSettings">
         <div class="font-ctrl" title="Results sidebar font size">
           <label>Results</label>
           <input type="range" id="sidebarFontRange" min="10" max="22" value="13"
@@ -1487,24 +1492,49 @@ function setupResizers() {
   makeResizer('resizerRight', 'lexiconPanel', 'shrink-with-mouse');
 }
 
+// The browse panel (chapter/verse nav, font sliders, English/Read toggles)
+// must always keep enough width for its controls to stay visible -- the
+// sidebars can wrap onto extra rows (see #browseNav flex-wrap) but they
+// can't be allowed to squeeze the browse panel down to nothing. So each
+// sidebar's max width is capped dynamically against the *other* sidebar's
+// current width and the window size, not just a fixed constant.
+const RESIZER_MIN_WIDTH = 180, RESIZER_MAX_WIDTH = 640;
+const BROWSE_PANEL_MIN_WIDTH = 320; // keep in sync with #browsePanel's CSS min-width
+
+function resizerMaxWidthFor(panelId) {
+  const otherId = panelId === 'resultsPanel' ? 'lexiconPanel' : 'resultsPanel';
+  const other = document.getElementById(otherId);
+  const otherWidth = other ? other.getBoundingClientRect().width : RESIZER_MIN_WIDTH;
+  const resizers = 10; // 2 x 5px resizer bars
+  const available = window.innerWidth - otherWidth - BROWSE_PANEL_MIN_WIDTH - resizers;
+  return Math.max(RESIZER_MIN_WIDTH, Math.min(RESIZER_MAX_WIDTH, available));
+}
+
+function clampPanelWidth(panel, panelId) {
+  const max = resizerMaxWidthFor(panelId);
+  const current = parseInt(panel.style.width, 10) || panel.getBoundingClientRect().width;
+  panel.style.width = Math.max(RESIZER_MIN_WIDTH, Math.min(max, current)) + 'px';
+}
+
 function makeResizer(handleId, panelId, mode) {
   const handle = document.getElementById(handleId);
   const panel  = document.getElementById(panelId);
   if (!handle || !panel) return;
 
-  const MIN_WIDTH = 180, MAX_WIDTH = 640;
   const storageKey = 'bs-width-' + panelId;
 
   // Restore a previously-saved width, if any.
   try {
     const saved = parseInt(lsGet(storageKey), 10);
-    if (saved) panel.style.width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, saved)) + 'px';
+    if (saved) panel.style.width = Math.max(RESIZER_MIN_WIDTH, Math.min(RESIZER_MAX_WIDTH, saved)) + 'px';
   } catch (err) { /* localStorage unavailable -- fine, just use the CSS default */ }
+  clampPanelWidth(panel, panelId);
 
   handle.addEventListener('mousedown', e => {
     e.preventDefault();
     const startX     = e.clientX;
     const startWidth = panel.getBoundingClientRect().width;
+    const maxWidth   = resizerMaxWidthFor(panelId);
     handle.classList.add('dragging');
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
@@ -1515,7 +1545,7 @@ function makeResizer(handleId, panelId, mode) {
       // panels on the right of their resizer (anchored to the window's
       // right edge) grow when dragged left.
       const raw = mode === 'grow-with-mouse' ? startWidth + delta : startWidth - delta;
-      panel.style.width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, raw)) + 'px';
+      panel.style.width = Math.max(RESIZER_MIN_WIDTH, Math.min(maxWidth, raw)) + 'px';
     }
     function onUp() {
       document.removeEventListener('mousemove', onMove);
@@ -1529,6 +1559,13 @@ function makeResizer(handleId, panelId, mode) {
     document.addEventListener('mouseup', onUp);
   });
 }
+
+window.addEventListener('resize', () => {
+  const resultsPanel = document.getElementById('resultsPanel');
+  const lexiconPanel = document.getElementById('lexiconPanel');
+  if (resultsPanel) clampPanelWidth(resultsPanel, 'resultsPanel');
+  if (lexiconPanel) clampPanelWidth(lexiconPanel, 'lexiconPanel');
+});
 
 // ════════════════════════════════════════════════════════════
 //  MORPH POPUP (quick glance near cursor)
