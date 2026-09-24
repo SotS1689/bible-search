@@ -25,7 +25,8 @@
     try {
       let results, hlTerms, hlStrongs;
       if (lang === 'eng') {
-        ({ results, hl_terms: hlTerms, hl_strongs: hlStrongs } = searchEnglishInline(q, bookFrom, bookTo, db));
+        const stem = params.get('stem') === '1';
+        ({ results, hl_terms: hlTerms, hl_strongs: hlStrongs } = searchEnglishInline(q, bookFrom, bookTo, db, stem));
       } else {
         ({ results, hl_terms: hlTerms, hl_strongs: hlStrongs } = search(q, lang, bookFrom, bookTo, db));
       }

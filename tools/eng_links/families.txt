@@ -1,0 +1,74 @@
+# Irregular derivational families: words sharing a root that spelling rules
+# can't connect. First word on each line is the family head. Only base forms
+# are needed -- inflections (died, deaths, ...) follow automatically.
+# Morphology only: no synonym groups (son/child) here.
+die dead death deadly deathly deadness
+live life alive lively livelihood lifeless
+strong strength strengthen
+long length lengthen prolong
+wise wisdom
+full fill fullness
+high height heighten
+young youth youthful
+clean cleanse
+pure purify purification impurity impure purity
+just justice justify justification injustice justly
+holy hallow hallowed
+sanctify sanctuary sanctification sanctity
+prophet prophecy prophesy
+serve servant service servitude
+heir inherit inheritance heritage disinherit
+choose choice chosen choicest
+save salvation savior
+sit seat
+rise raise arise
+lift lofty loftiness
+see sight insight foresight sighted
+give gift giver
+know knowledge foreknow foreknowledge
+warm warmth
+deep depth deepen
+wide width widen
+broad breadth
+true truth truly
+heal health
+joy rejoice enjoy enjoyment joyful joyous
+fear afraid
+anger angry
+war warrior warfare
+old elder eldest elderly
+feed food fed fodder
+near nearby neighbor
+other another otherwise
+though although
+dark darken darkness
+bless blessing blessed
+curse accursed
+shame ashamed unashamed
+able ability
+enemy enmity
+poor poverty impoverish
+remember memory memorial remind reminder
+remain remnant remainder
+receive reception
+destroy destruction indestructible
+assemble assembly
+abound abundance abundant
+captive captivity capture captor
+number numerous
+glory glorify glorious
+mercy merciful merciless
+sin sinner sinful
+proud pride
+wrath wroth
+hunger hungry
+thirst thirsty
+blood bloody
+ten tithe tenth
+slay slain slaughter slayer
+lot allot allotment
+strike stroke
+anoint ointment
+idol idolatry idolatrous
+drink drunk drunkard drunken drunkenness
+city citizen citizenship

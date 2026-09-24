@@ -60,7 +60,7 @@
       dbLoadStarted = true;
       ensureOverlay();
     }
-    dbInstance = await DB.loadDb(updateOverlay);
+    [dbInstance] = await Promise.all([DB.loadDb(updateOverlay), EngLinks.load()]);
     hideOverlay();
     return dbInstance;
   }

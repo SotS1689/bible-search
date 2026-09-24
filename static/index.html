@@ -67,6 +67,10 @@
   button:hover { background: #c73450; }
   .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
   .btn-secondary:hover { background: var(--border); }
+  .stem-toggle { display: none; align-items: center; gap: 4px; font-size: 13px; color: var(--text);
+    cursor: pointer; white-space: nowrap; user-select: none; }
+  .stem-toggle.on { display: inline-flex; }
+  .stem-toggle input { margin: 0; cursor: pointer; accent-color: var(--accent); }
 
   #main { display: flex; flex: 1; overflow: hidden; }
 
@@ -403,6 +407,10 @@
     <option value="heb">Hebrew (OT)</option>
     <option value="eng">English (BLB)</option>
   </select>
+  <label id="stemToggle" class="stem-toggle"
+         title="Link stemming: also match other forms of each word (love → loved, loving, beloved; go → went, gone)">
+    <input type="checkbox" id="stemCheck" onchange="onStemChange()"> Stem
+  </label>
   <button onclick="doSearch()">Search</button>
   <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
   <div style="position:relative; display:inline-block;">
@@ -863,6 +871,16 @@ function _handleTranslitBeforeinput(e) {
   el.setSelectionRange(insertPos + 1, insertPos + 1);
 }
 
+// Link-stemming checkbox: only meaningful for English searches.
+function updateStemToggle() {
+  const eng = document.getElementById('langSelect').value === 'eng';
+  document.getElementById('stemToggle').classList.toggle('on', eng);
+}
+function onStemChange() {
+  lsSet('bw-stem', document.getElementById('stemCheck').checked ? '1' : '0');
+  if (document.getElementById('searchInput').value.trim()) doSearch();
+}
+
 function onLangChange() {
   rawValue = '';
   const el = document.getElementById('searchInput');
@@ -875,6 +893,7 @@ function onLangChange() {
   } else {
     el.placeholder = "Search...";
   }
+  updateStemToggle();
   // Update results list language styling
   currentResults = [];
   document.getElementById('resultsList').innerHTML = '';
@@ -1652,6 +1671,7 @@ async function doSearch() {
   const lang = document.getElementById('langSelect').value;
   if (!q) return;
   bsTrackUsage(true);
+  updateStemToggle();
 
   // Handle language switching: G/Greek, H/Hebrew, E/English
   const LANG_SWITCH = {
@@ -1718,6 +1738,7 @@ async function doSearch() {
 
   let url = `/api/search?q=${encodeURIComponent(q)}&lang=${lang}`;
   if (limitBookFrom !== null) url += `&book_from=${limitBookFrom}&book_to=${limitBookTo}`;
+  if (lang === 'eng' && document.getElementById('stemCheck').checked) url += '&stem=1';
   const res  = await fetch(url);
   const data = await res.json();
 
@@ -2408,6 +2429,8 @@ function restorePrefs() {
     englishVisible = true;
     document.getElementById('englishTrack').classList.add('on');
   }
+  document.getElementById('stemCheck').checked = lsGet('bw-stem') === '1';
+  updateStemToggle();
   if (lsGet('bw-readmode') === '1') {
     readModeOn = true;
     document.getElementById('readTrack').classList.add('on');

@@ -250,9 +250,18 @@
   // ─── English (BLB) search — mirrors app.py's _search_english_inline ────
   function reEscape(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
+  // Link stemming for the current English search (set by searchEnglishInline).
+  let engStem = false;
+
+  // The word itself, or with stemming on, every form linked to it.
+  function formsEng(raw) {
+    return engStem ? EngLinks.expand(raw) : [raw];
+  }
+
   function wordRe(raw) {
-    const pat = reEscape(raw).replace(/\\\*/g, '\\w*').replace(/\\\?/g, '\\w');
-    return new RegExp('\\b' + pat + '\\b', 'i');
+    const pats = formsEng(raw).map((f) =>
+      reEscape(f).replace(/\\\*/g, '\\w*').replace(/\\\?/g, '\\w'));
+    return new RegExp('\\b(?:' + pats.join('|') + ')\\b', 'i');
   }
 
   function wordMatch(text, raw) {
@@ -262,13 +271,14 @@
   }
 
   function phraseMatchEng(text, phrase) {
-    const words = phrase.words.map((w) => w.raw);
+    const words = phrase.words.map((w) =>
+      '\\b(?:' + formsEng(w.raw).map(reEscape).join('|') + ')\\b');
     let pat;
     if (phrase.max_gap === 0) {
-      pat = words.map((w) => '\\b' + reEscape(w) + '\\b').join('\\s+');
+      pat = words.join('\\s+');
     } else {
       const gap = '(?:\\s+\\S+){0,' + phrase.max_gap + '}\\s+';
-      pat = words.map((w) => '\\b' + reEscape(w) + '\\b').join(gap);
+      pat = words.join(gap);
     }
     return new RegExp(pat, 'i').test(text);
   }
@@ -292,10 +302,12 @@
     return [];
   }
 
-  function searchEnglishInline(cmdline, bookFrom, bookTo, db) {
+  function searchEnglishInline(cmdline, bookFrom, bookTo, db, stem) {
+    engStem = !!stem;
     const ast = parse(cmdline);
     const allTerms = extractTermsEng(ast);
-    const hl = Array.from(new Set(allTerms.map((t) => t.toLowerCase())));
+    const hl = Array.from(new Set(allTerms.flatMap((t) =>
+      formsEng(t.replace(/^[.'!/\\]+/, '')).map((f) => f.toLowerCase()))));
 
     if (!DB.tableExists(db, 'translations')) {
       return { results: [], hl_terms: hl, hl_strongs: [] };
@@ -362,16 +374,17 @@
       return '%' + t.replace(/^[.'!/]+/, '').replace(/\*/g, '%').replace(/\?/g, '_') + '%';
     }
 
+    // '(text LIKE ? OR ...)' over every form of the given terms.
+    function likeGroup(terms) {
+      const likes = terms.flatMap((t) => formsEng(t.replace(/^[.'!/]+/, '')).map(makeLike));
+      params.push(...likes);
+      return '(' + likes.map(() => 'text LIKE ?').join(' OR ') + ')';
+    }
+
     if (ast instanceof Or) {
-      if (allTerms.length) {
-        conditions.push('(' + allTerms.map(() => 'text LIKE ?').join(' OR ') + ')');
-        for (const t of allTerms) params.push(makeLike(t));
-      }
+      if (allTerms.length) conditions.push(likeGroup(allTerms));
     } else {
-      for (const t of allTerms) {
-        conditions.push('text LIKE ?');
-        params.push(makeLike(t));
-      }
+      for (const t of allTerms) conditions.push(likeGroup([t]));
     }
 
     const sql = 'SELECT book,chapter,verse,text FROM translations WHERE ' +

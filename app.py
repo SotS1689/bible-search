@@ -20,17 +20,24 @@ app = Flask(__name__, static_folder=os.path.join(ROOT, 'static'))
 def index():
     return send_from_directory(os.path.join(ROOT, 'static'), 'index.html')
 
-def _search_english_inline(cmdline, book_from=None, book_to=None):
-    """English BLB search: proper word-boundary matching, phrase gaps, proximity."""
+def _search_english_inline(cmdline, book_from=None, book_to=None, stem=False):
+    """English BLB search: proper word-boundary matching, phrase gaps, proximity.
+    stem=True turns on link stemming: each word also matches every form linked
+    to it in eng_links.tsv (love -> loved, loving, beloved...)."""
     import sqlite3, os, re
     from corpus import DB_PATH, BOOK_NAMES
     from query import parse, Word, Phrase, And, Or
+    from eng_links import expand
 
     # ── helpers ──────────────────────────────────────────────────────────────
+    def forms(raw):
+        """The word itself, or with stemming on, every form linked to it."""
+        return expand(raw) if stem else [raw]
+
     def word_re(raw):
         """Build a word-boundary regex for a term, supporting * and ? wildcards."""
-        pat = re.escape(raw).replace(r'\*', r'\w*').replace(r'\?', r'\w')
-        return re.compile(r'\b' + pat + r'\b', re.IGNORECASE)
+        pats = [re.escape(f).replace(r'\*', r'\w*').replace(r'\?', r'\w') for f in forms(raw)]
+        return re.compile(r'\b(?:' + '|'.join(pats) + r')\b', re.IGNORECASE)
 
     def word_match(text, raw):
         raw = raw.lstrip(".'!/\\")   # strip any leading operator chars the parser may include
@@ -38,12 +45,13 @@ def _search_english_inline(cmdline, book_from=None, book_to=None):
         return bool(word_re(raw).search(text))
 
     def phrase_match(text, phrase):
-        words = [w.raw for w in phrase.words]
+        words = [r'\b(?:' + '|'.join(re.escape(f) for f in forms(w.raw)) + r')\b'
+                 for w in phrase.words]
         if phrase.max_gap == 0:
-            pat = r'\s+'.join(r'\b' + re.escape(w) + r'\b' for w in words)
+            pat = r'\s+'.join(words)
         else:
             gap = r'(?:\s+\S+){0,' + str(phrase.max_gap) + r'}\s+'
-            pat = gap.join(r'\b' + re.escape(w) + r'\b' for w in words)
+            pat = gap.join(words)
         return bool(re.search(pat, text, re.IGNORECASE))
 
     def eval_node(node, text):
@@ -68,7 +76,7 @@ def _search_english_inline(cmdline, book_from=None, book_to=None):
     # ── parse query ──────────────────────────────────────────────────────────
     ast      = parse(cmdline)
     all_terms = extract_terms(ast)
-    hl       = list(set(t.lower() for t in all_terms))
+    hl       = list(set(f.lower() for t in all_terms for f in forms(t.lstrip(".'!/\\"))))
 
     # ── connect ──────────────────────────────────────────────────────────────
     con = sqlite3.connect(DB_PATH)
@@ -127,15 +135,18 @@ def _search_english_inline(cmdline, book_from=None, book_to=None):
     def make_like(t):
         return '%' + t.lstrip(".'!/").replace('*','%').replace('?','_') + '%'
 
+    def like_group(terms):
+        """'(text LIKE ? OR ...)' over every form of the given terms."""
+        likes = [make_like(f) for t in terms for f in forms(t.lstrip(".'!/"))]
+        params.extend(likes)
+        return '(' + ' OR '.join('text LIKE ?' for _ in likes) + ')'
+
     if isinstance(ast, Or):
         if all_terms:
-            or_likes = ['text LIKE ?' for _ in all_terms]
-            conditions.append('(' + ' OR '.join(or_likes) + ')')
-            params.extend(make_like(t) for t in all_terms)
+            conditions.append(like_group(all_terms))
     else:
         for t in all_terms:
-            conditions.append("text LIKE ?")
-            params.append(make_like(t))
+            conditions.append(like_group([t]))
 
     sql  = ("SELECT book,chapter,verse,text FROM translations WHERE "
             + " AND ".join(conditions) + " ORDER BY book,chapter,verse")
@@ -162,7 +173,8 @@ def api_search():
     book_to   = request.args.get('book_to',   type=int)
     try:
         if lang == 'eng':
-            results, hl_terms, hl_strongs = _search_english_inline(q, book_from, book_to)
+            stem = request.args.get('stem') == '1'
+            results, hl_terms, hl_strongs = _search_english_inline(q, book_from, book_to, stem)
         else:
             results, hl_terms, hl_strongs = search(q, lang, book_from, book_to)
         return jsonify({
