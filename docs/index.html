@@ -352,6 +352,7 @@
     padding: 6px 10px; background: var(--surface2); border-radius: 4px;
     border-left: 3px solid var(--border);
   }
+  .hm-note a { color: var(--accent2); }
 
   /* Light theme overrides */
   :root.light .word-span:hover     { background: rgba(26,111,168,0.15); }
@@ -577,7 +578,7 @@
 <div id="statusBar">
   <span id="statusSearch">Ready</span>
   <span id="statusVerse"></span>
-  <span style="margin-left:auto; color:#3a4a6a;" title="Greek/Hebrew word glosses: STEPBible-Data (TBESG/TBESH), Tyndale House Cambridge &amp; STEPBible.org, CC BY 4.0">MorphGNT + OSHB + TBESG/TBESH | BibleWorks-style search</span>
+  <span style="margin-left:auto; color:#3a4a6a;" title="Greek/Hebrew word glosses: STEPBible-Data (TBESG/TBESH), Tyndale House Cambridge &amp; STEPBible.org, CC BY 4.0. English link stemming: AGID, Copyright 2000-2003 Kevin Atkinson; Open English WordNet (CC BY 4.0), derived from Princeton WordNet. Full credits in Quick Reference.">MorphGNT + OSHB + TBESG/TBESH | BibleWorks-style search</span>
 </div>
 
 <div id="morphPopup">
@@ -719,6 +720,22 @@
           <tr><td>o</td><td>ο</td><td>p</td><td>π</td><td>w</td><td>ω</td></tr>
           <tr><td>j</td><td>ς (final)</td><td colspan="4"></td></tr>
         </table>
+      </div>
+
+      <div class="hm-section">
+        <h3>English Link Stemming</h3>
+        <p class="hm-note">With <strong>English (BLB)</strong> selected, tick <strong>Stem</strong> next to the language menu to match every form of each search word, like BibleWorks&rsquo; &ldquo;Use Link Stemming&rdquo;. Works with phrases, AND/OR/NOT and proximity. Wildcard terms (<strong>*</strong>, <strong>?</strong>) are not stemmed.</p>
+        <table class="hm-table">
+          <tr><th>Search</th><th>Also matches</th></tr>
+          <tr><td>.love</td><td>loved, loves, loving, lover, beloved, lovely</td></tr>
+          <tr><td>.go</td><td>goes, going, gone, went</td></tr>
+          <tr><td>.rise</td><td>rose, risen, arise, arose, raise, raised</td></tr>
+          <tr><td>.he</td><td>him, his</td></tr>
+        </table>
+        <p class="hm-note"><strong>Credits.</strong> The word-link table is built from:<br>
+          &bull; <strong>AGID</strong> (Automatically Generated Inflection Database), Rev.&nbsp;4. Copyright 2000&ndash;2003 by Kevin Atkinson. Permission to use, copy, modify, distribute and sell this database, the associated scripts, the output created from the scripts and its documentation for any purpose is hereby granted without fee, provided that the above copyright notice appears in all copies. <a href="http://wordlist.aspell.net/" target="_blank" rel="noopener noreferrer">wordlist.aspell.net</a><br>
+          &bull; <strong>Open English WordNet</strong> 2025, by the Open English WordNet Community, licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>; derived from Princeton WordNet 3.0, Copyright 2006 by Princeton University. <a href="https://en-word.net/" target="_blank" rel="noopener noreferrer">en-word.net</a>
+        </p>
       </div>
 
     </div><!-- /helpModalBody -->

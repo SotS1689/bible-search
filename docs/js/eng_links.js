@@ -20,7 +20,7 @@
         heads = new Map();
         forms = new Map();
         for (const line of text.split(/\r?\n/)) {
-          if (!line) continue;
+          if (!line || line.startsWith('#')) continue;   // blank / credits header
           const tab = line.indexOf('\t');
           const word = tab < 0 ? line : line.slice(0, tab);
           const hs = tab < 0 || tab === line.length - 1 ? [word] : line.slice(tab + 1).split(',');

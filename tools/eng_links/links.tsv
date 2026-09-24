@@ -1,3 +1,15 @@
+# English link-stemming table for BibleSearch (word<TAB>link heads).
+# Built with tools/eng_links/build_links.py from:
+#  - AGID (Automatically Generated Inflection Database), Rev. 4.
+#    Copyright 2000-2003 by Kevin Atkinson. Permission to use, copy, modify,
+#    distribute and sell this database, the associated scripts, the output
+#    created from the scripts and its documentation for any purpose is hereby
+#    granted without fee, provided that the above copyright notice appears in
+#    all copies. http://wordlist.aspell.net/
+#  - Open English WordNet 2025, by the Open English WordNet Community,
+#    CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), derived from
+#    Princeton WordNet 3.0, Copyright 2006 by Princeton University.
+#    https://en-word.net/
 a	a
 aaron	aaron
 abaddon	abaddon

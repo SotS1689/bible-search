@@ -18,6 +18,8 @@ def _load():
     _heads, _forms = {}, {}
     with open(_PATH, encoding='utf-8') as f:
         for line in f:
+            if line.startswith('#'):     # credits header
+                continue
             word, _, heads = line.rstrip('\n').partition('\t')
             hs = heads.split(',') if heads else [word]
             _heads[word] = hs

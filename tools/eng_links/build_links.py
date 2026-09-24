@@ -346,12 +346,28 @@ def heads(w):
         res = {h if h not in FUNCTION or h == w else w for h in res}
     return res
 
+CREDITS = """\
+# English link-stemming table for BibleSearch (word<TAB>link heads).
+# Built with tools/eng_links/build_links.py from:
+#  - AGID (Automatically Generated Inflection Database), Rev. 4.
+#    Copyright 2000-2003 by Kevin Atkinson. Permission to use, copy, modify,
+#    distribute and sell this database, the associated scripts, the output
+#    created from the scripts and its documentation for any purpose is hereby
+#    granted without fee, provided that the above copyright notice appears in
+#    all copies. http://wordlist.aspell.net/
+#  - Open English WordNet 2025, by the Open English WordNet Community,
+#    CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), derived from
+#    Princeton WordNet 3.0, Copyright 2006 by Princeton University.
+#    https://en-word.net/
+"""
+
 if __name__ == '__main__':
     out = {w: sorted(heads(w)) for w in V}
     json.dump({'rule': RULE, 'affix': {f'{a}|{b}': s for (a, b), s in AFFIX_HIT.items()},
                'proper': sorted(w for w in V if is_proper(w))},
               open(f'{HERE}/rules.json', 'w'))
     with open(f'{HERE}/links.tsv', 'w', encoding='utf-8', newline='\n') as f:
+        f.write(CREDITS)
         for w in sorted(out):
             f.write(f"{w}\t{','.join(out[w])}\n")
     print('wrote', len(out), 'words; fixes', sorted(FIX) or 'none')
