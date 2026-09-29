@@ -1439,6 +1439,19 @@ async function loadChapter(book, chapter, scrollToV) {
   }
 }
 
+// Sof pasuq (U+05C3) marks the end of every Hebrew verse. The corpus stores
+// only the words, so it's appended at display time as a plain text node
+// (not part of the last word-span, so hover/lexicon lookups are unaffected).
+const SOF_PASUQ = '׃';
+function sofPasuqNode() {
+  const s = document.createElement('span');
+  s.className = 'sof-pasuq';
+  s.textContent = SOF_PASUQ;
+  return s;
+}
+const isHebrew = text => /[א-ת]/.test(text || '');
+const withSofPasuq = (text, lang) => (lang === 'heb' && text) ? text + SOF_PASUQ : text;
+
 // Builds tagged word-spans (for hover/right-click/highlighting) into `line`,
 // clearing it first except for any leading reference-label span.
 function _fillWordLine(line, words) {
@@ -1470,6 +1483,7 @@ function _fillWordLine(line, words) {
     line.appendChild(span);
     if (idx < words.length - 1) line.appendChild(document.createTextNode(' '));
   });
+  if (words.length && words[0].lang === 'heb') line.appendChild(sofPasuqNode());
 }
 
 async function loadChapterWords(book, chapter, verses) {
@@ -1845,7 +1859,7 @@ async function doSearch() {
     item.className = 'result-item';
     const langClass = lang === 'heb' ? 'hebrew' : (lang === 'grk' ? 'greek' : '');
     item.innerHTML = `<div class="result-ref">${r.ref}</div>
-      <div class="result-text ${langClass}">${r.text.substring(0,100)}${r.text.length>100?'…':''}</div>`;
+      <div class="result-text ${langClass}">${r.text.length>100 ? r.text.substring(0,100)+'…' : withSofPasuq(r.text, lang)}</div>`;
     item.addEventListener('click', async () => {
       document.querySelectorAll('.result-item').forEach(el => el.classList.remove('active'));
       item.classList.add('active');
@@ -2233,6 +2247,7 @@ async function renderReadMode(book) {
             para.appendChild(span);
             if (idx < words.length - 1) para.appendChild(document.createTextNode(' '));
           });
+          if (lang === 'heb') para.appendChild(sofPasuqNode());
           // Word-level data (morph codes) loaded lazily below
           para.appendChild(document.createTextNode(' '));
         }
@@ -2353,6 +2368,7 @@ async function loadReadModeWordData(book, chapter, para, lang, edition, idPrefix
       newSpans.push(span);
       if (idx < words.length - 1) newSpans.push(document.createTextNode(' '));
     });
+    if (lang === 'heb') newSpans.push(sofPasuqNode());
     newSpans.push(document.createTextNode(' '));
     // Remove old plain-text word nodes and insert new tagged ones
     const toRemove = [];
@@ -2508,7 +2524,8 @@ function restorePrefs() {
 async function copyResults() {
   if (!currentResults.length) return;
   const btn = document.getElementById('copyBtn');
-  const lines = currentResults.map(r => `${r.ref}\t${r.text}`);
+  const lines = currentResults.map(r =>
+    `${r.ref}\t${withSofPasuq(r.text, isHebrew(r.text) ? 'heb' : null)}`);
   const text  = lines.join('\n');
   try {
     await navigator.clipboard.writeText(text);
