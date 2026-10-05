@@ -7,6 +7,7 @@ to lowercase, unaccented Greek text, for comparison against corpus lemmas
 Standard BW/Perseus-style mapping. Final sigma 'j' renders as plain sigma
 since we compare in unaccented/unfinaled form.
 """
+import re
 import unicodedata
 
 LATIN_TO_GREEK = {
@@ -32,6 +33,19 @@ def strip_accents_lower(greek: str) -> str:
     bare = ''.join(c for c in nfkd if not unicodedata.combining(c))
     bare = bare.lower().replace('ς', 'σ')
     return bare
+
+
+# Every non-letter character is removed except a hyphen *inside* a word
+# (LXX compound names like Ιεχονια-ασιρ). Covers sentence punctuation
+# (, . · ; —), brackets, elision apostrophes (' ’) and CATSS '#' markers.
+_PUNCT_RE = re.compile(r"[^\w-]|_|^-+|-+$")
+
+
+def greek_search_form(surface: str) -> str:
+    """The `surface_norm` value stored for a Greek word: unaccented,
+    lowercase, sigma-folded, with punctuation stripped so that a word at
+    the end of a clause (e.g. 'χριστοῦ.') matches an exact-form search."""
+    return _PUNCT_RE.sub('', strip_accents_lower(surface))
 
 
 if __name__ == '__main__':

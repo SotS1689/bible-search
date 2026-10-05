@@ -21,7 +21,7 @@ sys.path.insert(0, SRC)
 
 from greek_map import load_morphgnt
 from hebrew_map import load_oshb_book, OSHB_BOOKS
-from greek_translit import strip_accents_lower
+from greek_translit import strip_accents_lower, greek_search_form
 
 MORPHGNT_BOOK_NUMS = {
     '61-Mt':40,'62-Mk':41,'63-Lk':42,'64-Jn':43,'65-Ac':44,
@@ -79,6 +79,9 @@ def build(db_path=None):
                 "FROM words WHERE lang='grk' AND (book<=39 OR book>=67)").fetchall()
             if _lxx_rows:
                 print(f"  Preserving {len(_lxx_rows):,} LXX word rows across rebuild...")
+            # Re-derive surface_norm so LXX rows imported before punctuation
+            # stripping get the same search form as the NT.
+            _lxx_rows = [r[:6] + (greek_search_form(r[5]),) + r[7:] for r in _lxx_rows]
 
     cur.execute('DROP TABLE IF EXISTS words')
     cur.execute('''CREATE TABLE words (
@@ -104,7 +107,7 @@ def build(db_path=None):
             lemma_n = strip_accents_lower(w['lemma'])
             rows.append(('grk', book_num, w['chapter'], w['verse'],
                          len(rows),
-                         w['surface'], strip_accents_lower(w['surface']),
+                         w['surface'], greek_search_form(w['surface']),
                          w['lemma'], lemma_n, w['bw_code']))
         print(f"  GNT {key}: {len(words)} words")
 
