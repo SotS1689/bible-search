@@ -61,6 +61,12 @@ def morphgnt_to_bw(pos: str, parse: str) -> str:
     return "z????"  # unknown lemma / unhandled POS
 
 
+# SBLGNT critical-apparatus sigla carried in MorphGNT's text column
+# (⸀ ⸁ ⸂ ⸃ ⸄ ⸅ variant markers, ⟦ ⟧ double brackets). Stripped so they
+# neither display nor break exact-form searches.
+APPARATUS_MARKS = str.maketrans('', '', '⸀⸁⸂⸃⸄⸅⟦⟧')
+
+
 def load_morphgnt(path):
     """Yields dicts: {ref, bw_code, lemma, surface} per word, in document order."""
     out = []
@@ -74,7 +80,7 @@ def load_morphgnt(path):
             book = int(ref[:2]); chapter = int(ref[2:4]); verse = int(ref[4:6])
             out.append({
                 'book': book, 'chapter': chapter, 'verse': verse,
-                'surface': text, 'lemma': lemma, 'bw_code': bw,
+                'surface': text.translate(APPARATUS_MARKS), 'lemma': lemma, 'bw_code': bw,
             })
     return out
 
