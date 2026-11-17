@@ -75,7 +75,7 @@
     if (cmdline.startsWith('.')) return parseAnd(cmdline.slice(1));
     if (cmdline.startsWith('/')) return parseOr(cmdline.slice(1));
     if (cmdline.startsWith("'")) return parsePhrase(cmdline.slice(1));
-    throw new Error(`Unrecognized command line start: ${JSON.stringify(cmdline)}`);
+    throw new Error("Search must start with operator. Use . for AND search, use / for OR search, and use ' to search a phrase.");
   }
 
   function splitTopLevel(s, sepChars) {

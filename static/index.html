@@ -402,7 +402,12 @@
 <div id="topbar">
   <h1>📖 BibleSearch</h1>
   <input id="searchInput" type="text" autocomplete="off" spellcheck="false" dir="auto"
-         placeholder="Search...">
+         placeholder="Type search operator to start: AND (.), OR (/), phrase (')..."
+         title="Start every search with an operator:
+.   all words (.faith hope)
+/   any word (/faith hope)
+'   exact phrase ('in the beginning)
+Or type a reference like John 3:16 to jump there.">
   <select id="langSelect" onchange="onLangChange()">
     <option value="grk">Greek (LXX/NT)</option>
     <option value="heb">Hebrew (OT)</option>
@@ -916,12 +921,14 @@ function onLangChange() {
   const el = document.getElementById('searchInput');
   el.value = '';
   const lang = document.getElementById('langSelect').value;
+  // Make it obvious that a search needs an operator (. / ') in front;
+  // a bare word is otherwise an error.
   if (lang === 'grk') {
-    el.placeholder = "Search...";
+    el.placeholder = "Type search operator to start: AND (.), OR (/), phrase (')...";
   } else if (lang === 'heb') {
-    el.placeholder = "Search...";
+    el.placeholder = "Type search operator to start: AND (.), OR (/), phrase (')...";
   } else {
-    el.placeholder = "Search...";
+    el.placeholder = "Type search operator to start: AND (.), OR (/), phrase (')...";
   }
   updateStemToggle();
   // Update results list language styling

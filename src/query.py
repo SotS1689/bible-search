@@ -102,7 +102,9 @@ def parse(cmdline: str):
         return _parse_or(cmdline[1:])
     if cmdline.startswith("'"):
         return _parse_phrase(cmdline[1:])
-    raise ValueError(f"Unrecognized command line start: {cmdline!r}")
+    raise ValueError(
+        "Search must start with operator. Use . for AND search, use / for OR search, and use ' to search a phrase."
+    )
 
 
 def _split_top_level(s: str, sep_chars: str):
